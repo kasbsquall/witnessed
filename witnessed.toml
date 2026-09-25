@@ -1,0 +1,31 @@
+# witnessed.toml — baseline definitions for the witnessed tool.
+# Each entry has:
+#   id       – unique string; determines the .coverage file name.
+#   kind     – "used" or "tested".
+#   commands – list of argv lists; each runs as:
+#              python -m coverage run --data-file=<repo>/.witnessed/<id>.coverage
+#                  --source=<package_dir> <args...>
+#              Commands after the first append to the same .coverage file.
+#   cwd      – working directory for the subprocess, relative to repo root.
+#              Defaults to the repo root.
+
+[[baselines]]
+id = "tested"
+kind = "tested"
+# Run the tabulate test suite from inside sample/tabulate so that tabulate is
+# importable and pytest picks up its own pyproject.toml configuration.
+cwd = "sample/tabulate"
+commands = [
+    ["-m", "pytest", "test", "-p", "no:cacheprovider", "-q",
+     "--ignore=test/test_grapheme_clusters.py",
+     "--no-header", "--tb=no"],
+]
+
+[[baselines]]
+id = "used"
+kind = "used"
+# Run both usage scripts back-to-back, accumulating into one .coverage file.
+commands = [
+    ["sample/usage/readme_examples.py"],
+    ["sample/usage/cli_examples.py"],
+]

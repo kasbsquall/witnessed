@@ -2,11 +2,35 @@
 
 import argparse
 import sys
+from collections import Counter
+from pathlib import Path
 
 
 def _cmd_baseline(args: argparse.Namespace) -> None:  # noqa: ARG001
-    print("not implemented")
-    sys.exit(2)
+    from .observe import run_baselines, write_baseline_json
+
+    repo_root = Path.cwd()
+    package_dir = Path("sample/tabulate/tabulate")
+
+    payload = run_baselines(repo_root, package_dir)
+    out_path = write_baseline_json(repo_root, payload)
+
+    counts: Counter[str] = Counter()
+    for info in payload["units"].values():
+        counts[info["level"]] += 1
+
+    print(f"baseline.json written to {out_path}")
+    for level in ("used", "tested", "agent_witnessed", "unwitnessed"):
+        if counts[level]:
+            print(f"  {level}: {counts[level]}")
+
+    # Report any non-zero exits.
+    for rec in payload["baselines"]:
+        if rec["exit_code"] != 0:
+            print(
+                f"  baseline '{rec['id']}' exited {rec['exit_code']}",
+                file=sys.stderr,
+            )
 
 
 def _cmd_scan(args: argparse.Namespace) -> None:  # noqa: ARG001
