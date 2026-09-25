@@ -88,7 +88,7 @@ def build_report(
     first_unwitnessed_idx = -1
     for i, rec in enumerate(changed):
         level = rec.get("level", "unwitnessed")
-        if level == "unwitnessed" and first_unwitnessed_idx == -1:
+        if level in ("unwitnessed", "agent_witnessed") and first_unwitnessed_idx == -1:
             first_unwitnessed_idx = i
 
     for i, rec in enumerate(changed):
@@ -370,18 +370,19 @@ body {{
    ================================================================ */
 .context {{
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   margin-bottom: 48px;
 }}
 @media (max-width: 719px) {{
-  .context {{ grid-template-columns: 1fr; }}
+  .context {{ grid-template-columns: minmax(0, 1fr); }}
 }}
 .context__card {{
   background: var(--cell);
   border-radius: 3px;
   border: 1px solid var(--line);
   padding: 20px;
+  min-width: 0;
 }}
 .context__label {{
   font-size: 11px;
@@ -427,27 +428,17 @@ body {{
    MOTION
    ================================================================ */
 @media (prefers-reduced-motion: no-preference) {{
-  .js-motion .block {{
-    opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 220ms ease calc(var(--delay, 0) * 1ms),
-                transform 220ms ease calc(var(--delay, 0) * 1ms);
+  @keyframes rise {{
+    from {{ opacity: 0; transform: translateY(6px); }}
+    to   {{ opacity: 1; transform: none; }}
   }}
-  .js-motion .block.visible {{
-    opacity: 1;
-    transform: none;
+  .block {{
+    animation: rise 220ms ease both;
+    animation-delay: calc(var(--delay, 0) * 1ms);
   }}
-  .js-motion .cell {{
-    opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 200ms ease calc(var(--stagger, 0) * 30ms + 120ms),
-                transform 200ms ease calc(var(--stagger, 0) * 30ms + 120ms),
-                border-color 120ms ease,
-                background 120ms ease;
-  }}
-  .js-motion .cell.visible {{
-    opacity: 1;
-    transform: none;
+  .cell {{
+    animation: rise 200ms ease both;
+    animation-delay: calc(var(--stagger, 0) * 30ms + 120ms);
   }}
 }}
 
@@ -457,7 +448,6 @@ body {{
 </style>
 </head>
 <body>
-<script>document.body.classList.add('js-motion');</script>
 <div class="wrap">
 
   <!-- HEADER -->
@@ -596,15 +586,6 @@ body {{
   var def = document.querySelector('.cell[aria-pressed="true"]');
   if (!def && cells.length) {{ def = cells[0]; }}
   if (def) {{ selectCell(def); }}
-
-  // Motion reveal.
-  var blocks = document.querySelectorAll('.block');
-  blocks.forEach(function (b) {{
-    requestAnimationFrame(function () {{ b.classList.add('visible'); }});
-  }});
-  cells.forEach(function (c) {{
-    requestAnimationFrame(function () {{ c.classList.add('visible'); }});
-  }});
 }})();
 </script>
 </body>
