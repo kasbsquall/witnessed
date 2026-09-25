@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "witnessed"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["coverage"]
+
+[project.scripts]
+witnessed = "witnessed.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["witnessed*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
