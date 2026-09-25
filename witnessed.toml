@@ -17,7 +17,6 @@ kind = "tested"
 cwd = "sample/tabulate"
 commands = [
     ["-m", "pytest", "test", "-p", "no:cacheprovider", "-q",
-     "--ignore=test/test_grapheme_clusters.py",
      "--no-header", "--tb=no"],
 ]
 

@@ -1,6 +1,10 @@
 """Command-line interface for witnessed."""
 
+from __future__ import annotations
+
 import argparse
+import json
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -33,9 +37,128 @@ def _cmd_baseline(args: argparse.Namespace) -> None:  # noqa: ARG001
             )
 
 
-def _cmd_scan(args: argparse.Namespace) -> None:  # noqa: ARG001
-    print("not implemented")
-    sys.exit(2)
+def _resolve_ref(ref: str, repo_root: Path) -> str:
+    """Return the full SHA for *ref*, or exit 2 on failure."""
+    result = subprocess.run(
+        ["git", "rev-parse", ref],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(f"error: could not resolve git ref {ref!r}", file=sys.stderr)
+        sys.exit(2)
+    return result.stdout.strip()
+
+
+def _cmd_scan(args: argparse.Namespace) -> None:
+    from .diff import changed_units
+    from .observe import load_baselines, run_baselines
+    from .verdict import Level, level_label, pr_verdict
+
+    repo_root = Path.cwd()
+    # TODO: make package_dir configurable; default to the tabulate sample.
+    package_dir = Path("sample/tabulate/tabulate")
+
+    base_ref: str = args.base
+    head_ref: str = getattr(args, "head", None) or "HEAD"
+
+    # Resolve both refs to full SHAs.
+    base_sha = _resolve_ref(base_ref, repo_root)
+    head_sha = _resolve_ref(head_ref, repo_root)
+
+    # Verify that the working tree HEAD matches the requested head ref.
+    actual_head = _resolve_ref("HEAD", repo_root)
+    if actual_head != head_sha:
+        print(
+            f"error: HEAD ({actual_head[:12]}) does not match --head {head_ref!r} "
+            f"({head_sha[:12]}). Check out the head commit before running scan.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    # 1. Map changed lines to function units.
+    changed = changed_units(
+        base=base_sha,
+        head=head_sha,
+        repo_root=repo_root,
+        package_dir=package_dir,
+    )
+
+    # 2. Run baselines on the current working tree to get evidence levels.
+    payload = run_baselines(repo_root=repo_root, package_dir=package_dir)
+    units_info: dict[str, dict] = payload["units"]
+
+    # 3. Build the changed list with levels.
+    changed_records = []
+    for cu in changed:
+        info = units_info.get(cu.qualname, {})
+        level: Level = info.get("level", "unwitnessed")  # type: ignore[assignment]
+        seen_by: list[str] = info.get("seen_by", [])
+        changed_records.append(
+            {
+                "qualname": cu.qualname,
+                "file": cu.file,
+                "change": cu.change,
+                "level": level,
+                "seen_by": seen_by,
+            }
+        )
+
+    # 4. Counts.
+    counts: Counter[str] = Counter()
+    for rec in changed_records:
+        counts[rec["level"]] += 1
+    total = len(changed_records)
+    unwitnessed = counts["unwitnessed"]
+
+    scan_payload = {
+        "base": base_sha,
+        "head": head_sha,
+        "changed": changed_records,
+        "counts": {
+            "used": counts["used"],
+            "tested": counts["tested"],
+            "agent_witnessed": counts["agent_witnessed"],
+            "unwitnessed": counts["unwitnessed"],
+        },
+    }
+
+    # 5. Write .witnessed/scan.json.
+    witnessed_dir = repo_root / ".witnessed"
+    witnessed_dir.mkdir(exist_ok=True)
+    scan_path = witnessed_dir / "scan.json"
+    scan_path.write_text(json.dumps(scan_payload, indent=2), encoding="utf-8")
+
+    # 6. Build and write .witnessed/comment.md.
+    comment_lines: list[str] = []
+    comment_lines.append(
+        f"{unwitnessed} of {total} changed functions were never seen running."
+    )
+
+    if changed_records:
+        comment_lines.append("")
+        comment_lines.append("| function | change | level | seen by |")
+        comment_lines.append("| --- | --- | --- | --- |")
+        for rec in changed_records:
+            fn = rec["qualname"]
+            change = rec["change"]
+            lv: Level = rec["level"]  # type: ignore[assignment]
+            label = level_label(lv)
+            seen = ", ".join(rec["seen_by"]) if rec["seen_by"] else "-"
+            comment_lines.append(f"| {fn} | {change} | {label} | {seen} |")
+
+    comment_path = witnessed_dir / "comment.md"
+    comment_path.write_text("\n".join(comment_lines) + "\n", encoding="utf-8")
+
+    # 7. Determine and print verdict.
+    levels: list[Level] = [rec["level"] for rec in changed_records]  # type: ignore[misc]
+    verdict = pr_verdict(levels)
+    verdict_label = level_label(verdict)
+
+    print(f"scan.json written to {scan_path}")
+    print(f"comment.md written to {comment_path}")
+    print(f"verdict: {verdict} — {verdict_label}")
 
 
 def _cmd_gate(args: argparse.Namespace) -> None:  # noqa: ARG001
@@ -56,7 +179,20 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("baseline", help="Run baselines and record coverage.")
-    sub.add_parser("scan", help="Map changed lines to functions and re-run baselines.")
+
+    scan_parser = sub.add_parser(
+        "scan", help="Map changed lines to functions and re-run baselines."
+    )
+    scan_parser.add_argument(
+        "--base", required=True, metavar="REF", help="Base git ref (e.g. main, SHA)."
+    )
+    scan_parser.add_argument(
+        "--head",
+        default=None,
+        metavar="REF",
+        help="Head git ref (default: HEAD).",
+    )
+
     sub.add_parser("gate", help="Validate a witness file.")
     sub.add_parser("report", help="Generate HTML report.")
 
