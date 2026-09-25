@@ -1,6 +1,6 @@
 # IBM Bob sessions
 
-Every line of product code in this repository was written by IBM Bob in these ten tasks, run on September 25, 2026. Each screenshot is the task summary as Bob showed it at the end. Costs are the task costs recorded by Bob, in Bobcoins.
+The code in `witnessed/`, `tests/` and `.bob/` was written by IBM Bob in these ten tasks, run on September 25, 2026. Each screenshot is the task summary as Bob showed it at the end. Costs are the task costs recorded by Bob, in Bobcoins.
 
 | # | Task | Mode | Bobcoins | Screenshot |
 |---|---|---|---:|---|
