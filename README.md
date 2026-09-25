@@ -47,16 +47,20 @@ A witness promotes a function to `agent_witnessed` only if all of the following 
 
 1. Exit code 0 within 30 seconds.
 2. Coverage shows executed lines inside the target body.
-3. The SHA-256 of the target source file is unchanged after the run.
+3. No .py file in the package directory was modified during the run.
 4. The witness calls the target through its package path.
 5. The witness never assigns attributes of the target module.
-6. The witness asserts on the value the target returns.
+6. The witness asserts a comparison or isinstance/len check on the return value.
 
 ## What the gate does not prove
 
 Rule 4 checks that the witness calls the target by name through the package path (e.g. `tabulate._is_file(...)` or `from tabulate import _is_file; _is_file(...)`). This resolves a name, not a binding. A witness can shadow the name, for example by assigning `_is_file = lambda x: True` before the call, and still satisfy rule 4 syntactically. The gate does not verify that the name was not rebound.
 
 Rule 2 is the defence against this: coverage measures which source lines inside the real function body executed. If the name was rebound to a different callable the original body lines will not appear in the coverage report and the gate will reject with `body_not_executed`. The combination of rule 4 (name check) and rule 2 (body coverage) makes it substantially harder to fool the gate, but a witness that replaces the body with identical source could still pass. The gate is a heuristic.
+
+Rule 3 now hashes every .py file under the package directory, not only the file containing the target. This closes two gaps: a witness could previously patch a sibling module, and because the Witness mode has the execute group it could also write package files through the shell (the edit tool fileRegex only restricts the edit tool). Both paths now trigger `target_modified`.
+
+Rule 6 now requires a comparison (==, !=, <, <=, >, >=, in, not in), an isinstance check, or a len-based comparison on the return value. Bare truthiness (`assert result`) and identity-against-None checks (`assert result is None`, `assert result is not None`) are rejected with `no_assertion`. The gate still does not verify that the assertion is correct or meaningful; a witness that compares the result to a wrong expected value will pass rule 6.
 
 ## How it was validated
 

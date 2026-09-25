@@ -16,14 +16,14 @@ _LEVEL_STYLE: dict[str, tuple[str, str, bool]] = {
 }
 
 # Six gate rules in the order the gate evaluates them.
+# Rule 1 covers both nonzero_exit and timeout (SPEC.md §4: "Exit code 0 within 30 seconds").
 _GATE_RULES: list[tuple[str, str]] = [
-    ("nonzero_exit",      "exits with code 0"),
-    ("timeout",           "completes within 30 seconds"),
+    ("nonzero_exit",      "exits with code 0 within 30 seconds"),
     ("body_not_executed", "executes the function body"),
-    ("target_modified",   "does not modify the target file"),
+    ("target_modified",   "does not modify any file in the package directory"),
     ("no_call_site",      "contains a call to the target"),
     ("patches_target",    "does not patch the target module"),
-    ("no_assertion",      "asserts something about the return value"),
+    ("no_assertion",      "asserts a comparison or isinstance/len check on the return value"),
 ]
 
 

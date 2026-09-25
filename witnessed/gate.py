@@ -41,6 +41,20 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _package_snapshots(pkg_dir: Path) -> dict[str, tuple[str, float]]:
+    """Return {rel_path: (sha256, mtime)} for every .py file under *pkg_dir*.
+
+    *pkg_dir* must exist; if it does not, returns an empty dict.
+    """
+    if not pkg_dir.is_dir():
+        return {}
+    result: dict[str, tuple[str, float]] = {}
+    for py_file in sorted(pkg_dir.rglob("*.py")):
+        key = py_file.as_posix()
+        result[key] = (_sha256(py_file), py_file.stat().st_mtime)
+    return result
+
+
 def _package_name(qualname: str) -> str:
     """Return the top-level package name from a qualname like 'tabulate._is_file'."""
     return qualname.split(".")[0]
@@ -163,12 +177,85 @@ def _is_setattr_on_module(call: ast.Call, pkg: str) -> bool:
     return False
 
 
+def _is_value_expr(node: ast.expr, assigned_names: set[str]) -> bool:
+    """Return True if *node* is the target return value or derived from it.
+
+    Accepted derivations: subscript (result[0]), attribute (result.x),
+    or a bare name that is the assigned result.
+    """
+    if isinstance(node, ast.Name) and node.id in assigned_names:
+        return True
+    if isinstance(node, (ast.Subscript, ast.Attribute)):
+        return _is_value_expr(node.value, assigned_names)  # type: ignore[arg-type]
+    return False
+
+
+def _is_substantive_assert(test: ast.expr, assigned_names: set[str], qualname: str) -> bool:
+    """Return True if *test* is a substantive assertion on the return value.
+
+    Accepted forms (applied to the return value or something derived from it):
+    - comparison using ==, !=, <, <=, >, >= (ast.Compare)
+    - ``in`` / ``not in`` membership test (ast.Compare with In/NotIn)
+    - isinstance(result, ...) call
+    - len(result) comparison (len call appears inside a Compare)
+
+    Rejected: bare truthiness (``assert result``), identity against None
+    (``assert result is None``, ``assert result is not None``).
+    """
+    # Direct call to the target inside the assert is only accepted if it appears
+    # within a Compare or isinstance/len wrapper, not as the bare test.
+    if isinstance(test, ast.Compare):
+        left = test.left
+        # Reject "result is None" and "result is not None".
+        for op, comparator in zip(test.ops, test.comparators):
+            if isinstance(op, (ast.Is, ast.IsNot)):
+                if isinstance(comparator, ast.Constant) and comparator.value is None:
+                    # Check the other side: if the left is the value, this is trivial.
+                    if _is_value_expr(left, assigned_names) or (
+                        isinstance(left, ast.Call) and _is_target_call(left, qualname)
+                    ):
+                        return False
+        # Otherwise any Compare touching the value is substantive.
+        all_nodes = [left] + list(test.comparators)
+        for n in all_nodes:
+            if _is_value_expr(n, assigned_names) or (
+                isinstance(n, ast.Call) and _is_target_call(n, qualname)
+            ):
+                return True
+        return False
+
+    if isinstance(test, ast.Call):
+        func = test.func
+        # isinstance(result, ...)
+        if isinstance(func, ast.Name) and func.id == "isinstance":
+            if test.args and (
+                _is_value_expr(test.args[0], assigned_names)
+                or (isinstance(test.args[0], ast.Call) and _is_target_call(test.args[0], qualname))
+            ):
+                return True
+        # len(result) used as bare truthiness is NOT accepted (len alone is not a compare).
+        # But len(result) inside a Compare is caught by the Compare branch above.
+        return False
+
+    # UnaryOp wrapping a Compare is accepted (e.g. ``assert not (result == x)``).
+    if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+        return _is_substantive_assert(test.operand, assigned_names, qualname)
+
+    # BoolOp: at least one operand must be substantive.
+    if isinstance(test, ast.BoolOp):
+        return any(_is_substantive_assert(v, assigned_names, qualname) for v in test.values)
+
+    return False
+
+
 def _has_assertion_on_return(witness_source: str, qualname: str) -> bool:
-    """Return True if the witness has an assert that uses the target's return value.
+    """Return True if the witness has a substantive assert on the target's return value.
 
     Two patterns are accepted:
-    1. Direct: ``assert target_call(...) ...``
-    2. Indirect: ``result = target_call(...); assert result ...``
+    1. Direct: ``assert target_call(...) == expected``
+    2. Indirect: ``result = target_call(...); assert result == expected``
+
+    Trivial assertions (bare truthiness, ``is None``, ``is not None``) are rejected.
     """
     try:
         tree = ast.parse(witness_source)
@@ -191,15 +278,8 @@ def _has_assertion_on_return(witness_source: str, qualname: str) -> bool:
     # Check assert statements.
     for node in ast.walk(tree):
         if isinstance(node, ast.Assert):
-            test = node.test
-            # Pattern 1: assert contains a direct call to target.
-            for sub in ast.walk(test):
-                if isinstance(sub, ast.Call) and _is_target_call(sub, qualname):
-                    return True
-            # Pattern 2: assert references a variable assigned from target.
-            for sub in ast.walk(test):
-                if isinstance(sub, ast.Name) and sub.id in assigned_from_call:
-                    return True
+            if _is_substantive_assert(node.test, assigned_from_call, qualname):
+                return True
 
     return False
 
@@ -294,12 +374,21 @@ def run_gate(
     # Rejection flags, evaluated in order.
     failures: dict[RejectionReason, bool] = {r: False for r in _RULE_ORDER}
 
-    # --- SHA-256 and mtime before run ---
-    sha_before: str | None = None
-    mtime_before: float | None = None
+    # --- Snapshot every .py file in the package directory before run ---
+    # Locate the package directory from the target file or sys.path resolution.
+    pkg_dir: Path | None = None
     if target_file and target_file.exists():
-        sha_before = _sha256(target_file)
-        mtime_before = target_file.stat().st_mtime
+        # The package directory is the top-level package folder under the repo root.
+        # e.g. repo_root/mypkg/ for qualname "mypkg.add"
+        candidate = repo_root / pkg_name
+        if candidate.is_dir():
+            pkg_dir = candidate
+        else:
+            # Fallback: the directory containing the target file itself.
+            pkg_dir = target_file.parent
+    pkg_snap_before: dict[str, tuple[str, float]] = {}
+    if pkg_dir is not None:
+        pkg_snap_before = _package_snapshots(pkg_dir)
 
     # --- Rule 5: patches_target (AST, before run) ---
     if _patches_target(witness_source, qualname):
@@ -355,11 +444,11 @@ def run_gate(
 
     # --- Rule 3: target_modified (SHA-256 and mtime after run) ---
     # Catches both permanent modifications (SHA-256 differs) and write-then-restore
-    # (mtime advanced even though content was restored).
-    if sha_before is not None and target_file and target_file.exists():
-        sha_after = _sha256(target_file)
-        mtime_after = target_file.stat().st_mtime
-        if sha_after != sha_before or mtime_after != mtime_before:
+    # (mtime advanced even though content was restored), across all .py files in
+    # the package directory (not just the file containing the target).
+    if pkg_snap_before and pkg_dir is not None:
+        pkg_snap_after = _package_snapshots(pkg_dir)
+        if pkg_snap_after != pkg_snap_before:
             failures["target_modified"] = True
 
     # --- Determine verdict (first failing rule in fixed order) ---

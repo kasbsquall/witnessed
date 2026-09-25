@@ -336,6 +336,51 @@ def test_reject_patches_target(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# target_modified: witness rewrites a sibling module (not the target file)
+# ---------------------------------------------------------------------------
+
+
+def test_reject_sibling_module_modified(tmp_path: Path) -> None:
+    """A witness that writes a sibling .py file in the package must fail target_modified.
+
+    The target file itself is untouched; the gate must detect the sibling change
+    because it now hashes every .py file under the package directory.
+    """
+    pkg, qualname = _make_pkg(tmp_path)
+    scan_path = _make_scan_json(tmp_path, qualname, pkg)
+
+    # Create a sibling module inside the same package directory.
+    sibling = pkg / "helper.py"
+    sibling.write_text("# helper\n", encoding="utf-8")
+
+    witness_path = tmp_path / "witness_sibling.py"
+    witness_path.write_text(
+        textwrap.dedent(f"""\
+            import sys, pathlib
+            sys.path.insert(0, {str(tmp_path)!r})
+            import mypkg
+
+            # Write to a sibling module, not the target file.
+            p = pathlib.Path({str(sibling)!r})
+            p.write_text("# modified\\n", encoding="utf-8")
+
+            result = mypkg.add(1, 2)
+            assert result == 3
+        """),
+        encoding="utf-8",
+    )
+
+    verdict = run_gate(
+        witness_path=witness_path,
+        qualname=qualname,
+        repo_root=tmp_path,
+        scan_json_path=scan_path,
+    )
+    assert not verdict["accepted"]
+    assert verdict["reason"] == "target_modified"
+
+
+# ---------------------------------------------------------------------------
 # no_assertion: witness calls the target but never asserts on its return value
 # ---------------------------------------------------------------------------
 
@@ -352,6 +397,85 @@ def test_reject_no_assertion(tmp_path: Path) -> None:
             result = mypkg.add(1, 2)
             print(result)
         """,
+    )
+    assert not verdict["accepted"]
+    assert verdict["reason"] == "no_assertion"
+
+
+# ---------------------------------------------------------------------------
+# no_assertion: trivial assertions (truthiness, is/is not None) are rejected
+# ---------------------------------------------------------------------------
+
+
+def test_reject_trivial_assertion_truthiness(tmp_path: Path) -> None:
+    """A witness that only asserts bare truthiness on the result must fail no_assertion."""
+    verdict = _run(
+        tmp_path,
+        f"""\
+            import sys
+            sys.path.insert(0, {str(tmp_path)!r})
+            import mypkg
+
+            result = mypkg.add(1, 2)
+            assert result
+        """,
+    )
+    assert not verdict["accepted"]
+    assert verdict["reason"] == "no_assertion"
+
+
+def test_reject_trivial_assertion_is_not_none(tmp_path: Path) -> None:
+    """A witness that only asserts 'result is not None' must fail no_assertion."""
+    verdict = _run(
+        tmp_path,
+        f"""\
+            import sys
+            sys.path.insert(0, {str(tmp_path)!r})
+            import mypkg
+
+            result = mypkg.add(1, 2)
+            assert result is not None
+        """,
+    )
+    assert not verdict["accepted"]
+    assert verdict["reason"] == "no_assertion"
+
+
+def test_reject_trivial_assertion_is_none(tmp_path: Path) -> None:
+    """A witness that only asserts 'result is None' must fail no_assertion.
+
+    The package has a function that returns None so the assert does not crash
+    at runtime; the gate must reject on the AST check alone.
+    """
+    import json
+
+    pkg = tmp_path / "nullpkg"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text(
+        "def noop(x):\n    pass\n",
+        encoding="utf-8",
+    )
+    qualname = "nullpkg.noop"
+    scan_path = _make_scan_json(tmp_path, qualname, pkg)
+
+    witness_path = tmp_path / "witness_isnone.py"
+    witness_path.write_text(
+        textwrap.dedent(f"""\
+            import sys
+            sys.path.insert(0, {str(tmp_path)!r})
+            import nullpkg
+
+            result = nullpkg.noop(1)
+            assert result is None
+        """),
+        encoding="utf-8",
+    )
+
+    verdict = run_gate(
+        witness_path=witness_path,
+        qualname=qualname,
+        repo_root=tmp_path,
+        scan_json_path=scan_path,
     )
     assert not verdict["accepted"]
     assert verdict["reason"] == "no_assertion"
