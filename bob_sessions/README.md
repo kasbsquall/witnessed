@@ -1,6 +1,6 @@
 # IBM Bob sessions
 
-The code in `witnessed/`, `tests/` and `.bob/` was written by IBM Bob in these ten tasks, run on September 25, 2026. Each screenshot is the task summary as Bob showed it at the end. Costs are the task costs recorded by Bob, in Bobcoins.
+The code in `witnessed/`, `tests/` and `.bob/` was written by IBM Bob in these twelve tasks, run on September 25, 2026. Each screenshot is the task summary as Bob showed it at the end. Costs are the task costs recorded by Bob, in Bobcoins.
 
 | # | Task | Mode | Bobcoins | Screenshot |
 |---|---|---|---:|---|
@@ -14,5 +14,7 @@ The code in `witnessed/`, `tests/` and `.bob/` was written by IBM Bob in these t
 | 8 | Witness hunt on upstream c327d6c, two parallel subagents | Witness | 0.653 | [summary](nightshift_task08_witness_hunt_summary.png), [subagents](nightshift_task08_witness_hunt_parallel_subagents.png) |
 | 9 | Report command, quieter scan, README | Agent | 3.228 | [task09](nightshift_task09_report_readme_summary.png) |
 | 10 | Report visual design and three render fixes | Agent | 1.929 | [task10](nightshift_task10_report_design_summary.png) |
+| 11 | Report: before and after, one color per meaning, upstream commit, witness code and gate rules | Agent | 0.720 | [task11](nightshift_task11_report_before_after_summary.png) |
+| 12 | Gate hardening: hash every package file, reject trivial assertions | Agent | 2.965 | [task12](nightshift_task12_gate_hardening_summary.png) |
 
-Total: 30.018 Bobcoins of the 40 available.
+Total: 33.703 Bobcoins of the 40 available.
