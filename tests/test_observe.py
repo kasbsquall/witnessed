@@ -170,3 +170,70 @@ def test_write_baseline_json(tmp_path: Path) -> None:
     assert out_path == tmp_path / ".witnessed" / "baseline.json"
     loaded = json.loads(out_path.read_text(encoding="utf-8"))
     assert loaded["commit"] == "abc"
+
+
+def test_subprocess_coverage(tmp_path: Path) -> None:
+    """A function called only inside a subprocess.Popen child must be
+    detected as observed (regression: baseline only measured the pytest
+    process, missing functions exercised in child processes)."""
+    # Package with two functions: one called directly, one only via subprocess.
+    pkg = tmp_path / "mypkg"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text(
+        "def direct():\n    return 'direct'\n\n"
+        "def via_subprocess():\n    return 'subprocess'\n",
+        encoding="utf-8",
+    )
+
+    # A script that calls via_subprocess() -- this will be launched as a child.
+    child_script = tmp_path / "child.py"
+    child_script.write_text(
+        "import sys\n"
+        "sys.path.insert(0, r'" + str(tmp_path) + "')\n"
+        "from mypkg import via_subprocess\n"
+        "via_subprocess()\n",
+        encoding="utf-8",
+    )
+
+    # The test suite: calls direct() directly and via_subprocess() via Popen.
+    test_file = tmp_path / "test_sub.py"
+    test_file.write_text(
+        "import subprocess, sys\n"
+        "import sys as _sys\n"
+        "import pathlib\n"
+        "_sys.path.insert(0, str(pathlib.Path(__file__).parent))\n"
+        "from mypkg import direct\n"
+        "\n"
+        "def test_direct():\n"
+        "    assert direct() == 'direct'\n"
+        "\n"
+        "def test_via_subprocess():\n"
+        "    r = subprocess.run(\n"
+        "        [sys.executable, r'" + str(child_script) + "'],\n"
+        "        capture_output=True,\n"
+        "    )\n"
+        "    assert r.returncode == 0\n",
+        encoding="utf-8",
+    )
+
+    (tmp_path / "witnessed.toml").write_text(
+        "[[ baselines ]]\n"
+        'id = "tested"\n'
+        'kind = "tested"\n'
+        "commands = [\n"
+        f'    ["-m", "pytest", "{test_file.as_posix()}", "-p", "no:cacheprovider", "-q"],\n'
+        "]\n",
+        encoding="utf-8",
+    )
+
+    payload = run_baselines(repo_root=tmp_path, package_dir=pkg)
+    units = payload["units"]
+    levels = {qn.split(".")[-1]: info["level"] for qn, info in units.items()}
+
+    assert levels.get("direct") == "tested", (
+        f"direct() should be tested, got {levels.get('direct')!r}"
+    )
+    assert levels.get("via_subprocess") == "tested", (
+        f"via_subprocess() should be tested (subprocess coverage), "
+        f"got {levels.get('via_subprocess')!r}"
+    )

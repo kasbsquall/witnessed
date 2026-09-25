@@ -6,7 +6,7 @@ build-backend = "setuptools.backends.legacy:build"
 name = "witnessed"
 version = "0.1.0"
 requires-python = ">=3.10"
-dependencies = ["coverage"]
+dependencies = ["coverage>=7.10"]
 
 [project.scripts]
 witnessed = "witnessed.cli:main"

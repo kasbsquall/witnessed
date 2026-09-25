@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import tempfile
 import tomllib
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -63,9 +64,15 @@ def _run_baseline(
 ) -> tuple[int, Path]:
     """Run all commands in *cfg* under coverage.py and return (exit_code, cov_file).
 
-    All commands share the same .coverage file; commands after the first are
-    run with ``--append`` so their data accumulates.  The returned exit_code is
+    All commands share the same coverage data file; the returned exit_code is
     the first non-zero code encountered, or 0 if all commands succeed.
+
+    Subprocess measurement is enabled via a temporary rcfile that sets
+    ``parallel = true`` and ``patch = subprocess``.  In parallel mode each
+    ``coverage run`` invocation writes its data to a suffixed file next to the
+    base data file.  After all commands finish, ``coverage combine`` merges all
+    those files -- including any written by child processes -- into the single
+    final data file.
     """
     witnessed_dir = repo_root / ".witnessed"
     witnessed_dir.mkdir(exist_ok=True)
@@ -74,23 +81,54 @@ def _run_baseline(
     run_cwd = (repo_root / cfg.cwd).resolve() if cfg.cwd is not None else repo_root
     overall_exit = 0
 
-    for i, cmd_args in enumerate(cfg.commands):
-        coverage_cmd = [
-            sys.executable,
-            "-m",
-            "coverage",
-            "run",
-            f"--data-file={cov_file}",
-            f"--source={package_dir}",
-        ]
-        if i > 0:
-            # Append subsequent runs to the same file.
-            coverage_cmd.append("--append")
-        coverage_cmd.extend(cmd_args)
+    # Write a temporary rcfile so that child processes launched by the baseline
+    # (e.g. via subprocess.Popen) are also measured.
+    rcfile_content = (
+        "[run]\n"
+        f"source = {package_dir}\n"
+        "parallel = true\n"
+        "patch = subprocess\n"
+    )
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".ini", delete=False, encoding="utf-8"
+    ) as tf:
+        tf.write(rcfile_content)
+        rcfile = tf.name
 
-        result = subprocess.run(coverage_cmd, cwd=run_cwd)
-        if result.returncode != 0 and overall_exit == 0:
-            overall_exit = result.returncode
+    try:
+        for cmd_args in cfg.commands:
+            # In parallel mode coverage run always writes a new suffixed file;
+            # do not use --append (it is incompatible with parallel mode).
+            coverage_cmd = [
+                sys.executable,
+                "-m",
+                "coverage",
+                "run",
+                f"--rcfile={rcfile}",
+                f"--data-file={cov_file}",
+            ]
+            coverage_cmd.extend(cmd_args)
+
+            result = subprocess.run(coverage_cmd, cwd=run_cwd)
+            if result.returncode != 0 and overall_exit == 0:
+                overall_exit = result.returncode
+
+        # Merge all parallel data files (from this process and subprocesses)
+        # into the single final data file.
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "coverage",
+                "combine",
+                f"--rcfile={rcfile}",
+                f"--data-file={cov_file}",
+            ],
+            cwd=run_cwd,
+            capture_output=True,
+        )
+    finally:
+        Path(rcfile).unlink(missing_ok=True)
 
     return overall_exit, cov_file
 

@@ -51,6 +51,23 @@ def test_parse_diff_lines_multiple_files() -> None:
     assert result == {"a.py": {2}, "b.py": {4}}
 
 
+def test_parse_diff_lines_deletion_only_hunk() -> None:
+    """A deletion-only hunk (+N,0) must record the insertion point so the
+    containing function is detected as modified (regression for bug where
+    deletion-only hunks produced an empty changed-lines set)."""
+    diff = textwrap.dedent("""\
+        diff --git a/pkg/mod.py b/pkg/mod.py
+        --- a/pkg/mod.py
+        +++ b/pkg/mod.py
+        @@ -1661 +1660,0 @@ def _wrap_text_to_colwidths(
+        -                    if line.strip() != ""
+    """)
+    result = _parse_diff_lines(diff)
+    # The insertion point is 1660; it must be recorded so the enclosing
+    # function is detected as modified.
+    assert result == {"pkg/mod.py": {1660}}
+
+
 # ---------------------------------------------------------------------------
 # Helpers for git-repo tests
 # ---------------------------------------------------------------------------
@@ -386,3 +403,49 @@ def test_scan_one_of_two_unwitnessed(tmp_path: Path) -> None:
     print("\n--- generated comment.md ---")
     print(comment_text)
     print("--- end ---")
+
+
+# ---------------------------------------------------------------------------
+# Regression: deletion-only hunk must surface the containing function
+# ---------------------------------------------------------------------------
+
+
+def test_changed_units_deletion_only_hunk(tmp_path: Path) -> None:
+    """A commit that only deletes a line inside a function must report that
+    function as 'modified' (regression: deletion-only hunks were silently
+    ignored because no '+' lines were emitted)."""
+    repo = _make_repo(tmp_path)
+    pkg = repo / "mypkg"
+    pkg.mkdir()
+
+    # base: function with a filtering guard on line 4
+    (pkg / "__init__.py").write_text(
+        textwrap.dedent("""\
+            def process(items):
+                result = []
+                for item in items:
+                    if item.strip() != "":
+                        result.append(item)
+                return result
+        """)
+    )
+    base_sha = _commit_all(repo, "base")
+
+    # head: remove the filtering guard (pure deletion, no additions)
+    (pkg / "__init__.py").write_text(
+        textwrap.dedent("""\
+            def process(items):
+                result = []
+                for item in items:
+                    result.append(item)
+                return result
+        """)
+    )
+    head_sha = _commit_all(repo, "head: remove blank-line filter")
+
+    result = changed_units(base_sha, head_sha, repo_root=repo, package_dir=pkg)
+    qualnames = [cu.qualname for cu in result]
+    assert "mypkg.process" in qualnames, (
+        f"deletion-only hunk did not surface mypkg.process; got {qualnames}"
+    )
+    assert result[0].change == "modified"

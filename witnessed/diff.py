@@ -27,10 +27,15 @@ def _parse_diff_lines(diff_output: str) -> dict[str, set[int]]:
 
     Returns a mapping of *file path* (as it appears in the diff, relative to
     the repo root) → set of line numbers in the **head** version that were
-    added or changed.
+    added, changed, or adjacent to a pure deletion.
 
     Only ``+`` lines that are not the ``+++`` header are counted; the file
     path comes from the ``+++ b/<path>`` header line.
+
+    For deletion-only hunks (new-side count == 0) there are no ``+`` lines, so
+    nothing would be recorded.  Instead we record the insertion point ``N``
+    (clamped to at least 1) so that the function containing that line in head
+    is detected as modified.
     """
     changed: dict[str, set[int]] = {}
     current_file: str | None = None
@@ -46,6 +51,11 @@ def _parse_diff_lines(diff_output: str) -> dict[str, set[int]]:
             m = _HUNK_RE.match(raw)
             if m:
                 current_line = int(m.group(1))
+                # Deletion-only hunk: new-side count is explicitly 0.
+                # No '+' lines will follow, so record the insertion point now.
+                new_count = int(m.group(2)) if m.group(2) is not None else 1
+                if new_count == 0 and current_file is not None:
+                    changed.setdefault(current_file, set()).add(max(1, current_line))
             continue
         if current_file is None:
             continue
