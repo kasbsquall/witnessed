@@ -192,6 +192,53 @@ def test_changed_units_deleted_ignored(tmp_path: Path) -> None:
     assert "mypkg.remove" not in qualnames
 
 
+def test_changed_units_modified_subdirectory(tmp_path: Path) -> None:
+    """Regression: a package inside a subdirectory must report modified, not added.
+
+    Previously _enumerate_units_from_source built the qualname from the full
+    package path ("sample.tabulate.tabulate._is_file") while enumerate_units
+    produced "tabulate._is_file", so 0 of N qualnames matched and every
+    modified function was reported as "added".
+
+    Layout: repo/sub/mypkg/mod.py (package sits two directories deep).
+    """
+    repo = _make_repo(tmp_path)
+
+    sub = repo / "sub"
+    sub.mkdir()
+    pkg = sub / "mypkg"
+    pkg.mkdir()
+
+    # base commit: function exists with its original body
+    (pkg / "__init__.py").write_text("")
+    (pkg / "mod.py").write_text(
+        textwrap.dedent("""\
+            def compute():
+                return 1
+        """)
+    )
+    base_sha = _commit_all(repo, "base")
+
+    # head commit: same function, body changed
+    (pkg / "mod.py").write_text(
+        textwrap.dedent("""\
+            def compute():
+                return 2
+        """)
+    )
+    head_sha = _commit_all(repo, "head: modify compute body")
+
+    result = changed_units(base_sha, head_sha, repo_root=repo, package_dir=pkg)
+    assert len(result) == 1, f"expected 1 result, got {result}"
+    cu = result[0]
+    assert cu.qualname == "mypkg.mod.compute", f"wrong qualname: {cu.qualname!r}"
+    assert cu.change == "modified", (
+        f"expected 'modified' but got {cu.change!r} — "
+        "qualname mismatch between head and base enumeration"
+    )
+
+
+
 # ---------------------------------------------------------------------------
 # Scan end-to-end: 1 of 2 changed functions never seen running
 # ---------------------------------------------------------------------------

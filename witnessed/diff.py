@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import ast
 import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from .units import Unit, _collect, _module_prefix, enumerate_units
+from .units import enumerate_units, units_from_source
 
 Change = Literal["added", "modified"]
 
@@ -58,47 +57,6 @@ def _parse_diff_lines(diff_output: str) -> dict[str, set[int]]:
             current_line += 1
 
     return changed
-
-
-def _enumerate_units_from_source(source: str, rel_file: str, package_dir_rel: str) -> list[Unit]:
-    """Parse *source* text and return units as if it lived at *rel_file*.
-
-    *package_dir_rel* is the package directory path relative to repo root
-    (forward slashes), used to compute the module prefix.
-    """
-    try:
-        tree = ast.parse(source, filename=rel_file)
-    except SyntaxError:
-        return []
-
-    # Reconstruct the module prefix from the relative file path.
-    # rel_file e.g. "sample/tabulate/tabulate/tabulate.py"
-    # package_dir_rel e.g. "sample/tabulate/tabulate"
-    rel_parts = rel_file.replace("\\", "/").split("/")
-    pkg_parts = package_dir_rel.replace("\\", "/").rstrip("/").split("/")
-
-    # Strip the package_dir_rel prefix from rel_file to get path inside pkg.
-    if rel_parts[: len(pkg_parts)] == pkg_parts:
-        inner_parts = rel_parts[len(pkg_parts) :]
-    else:
-        inner_parts = rel_parts
-
-    # Build dotted module prefix analogous to _module_prefix().
-    # inner_parts looks like ["tabulate.py"] or ["sub", "mod.py"]
-    if inner_parts:
-        # Remove .py suffix from last part
-        inner_parts[-1] = re.sub(r"\.py$", "", inner_parts[-1])
-        if inner_parts[-1] == "__init__":
-            inner_parts = inner_parts[:-1]
-
-    # Full path prefix includes the package directory name components.
-    all_parts = pkg_parts + inner_parts
-    # Module prefix is all components joined with dots, e.g. "tabulate."
-    mod_prefix = ".".join(all_parts) + "." if all_parts else ""
-
-    results: list[Unit] = []
-    _collect(tree.body, mod_prefix, rel_file, results)
-    return results
 
 
 def _git_show_source(ref: str, rel_file: str, repo_root: Path) -> str | None:
@@ -179,7 +137,7 @@ def changed_units(
             if src is None:
                 base_qualnames_by_file[rel_file] = set()
             else:
-                units = _enumerate_units_from_source(src, rel_file, pkg_rel)
+                units = units_from_source(src, rel_file, pkg_rel)
                 base_qualnames_by_file[rel_file] = {u.qualname for u in units}
         return base_qualnames_by_file[rel_file]
 

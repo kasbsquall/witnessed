@@ -161,9 +161,35 @@ def _cmd_scan(args: argparse.Namespace) -> None:
     print(f"verdict: {verdict} — {verdict_label}")
 
 
-def _cmd_gate(args: argparse.Namespace) -> None:  # noqa: ARG001
-    print("not implemented")
-    sys.exit(2)
+def _cmd_gate(args: argparse.Namespace) -> None:
+    from .gate import run_gate
+
+    repo_root = Path.cwd()
+    witness_path = Path(args.witness)
+    qualname: str = args.target
+
+    if not witness_path.exists():
+        print(f"error: witness file not found: {witness_path}", file=sys.stderr)
+        sys.exit(2)
+
+    verdict = run_gate(
+        witness_path=witness_path,
+        qualname=qualname,
+        repo_root=repo_root,
+    )
+
+    status = "accepted" if verdict["accepted"] else f"rejected ({verdict['reason']})"
+    print(f"gate: {status}")
+    if verdict["body_lines_executed"]:
+        print(f"  body lines executed: {verdict['body_lines_executed']}")
+
+    gate_dir = repo_root / ".witnessed" / "gate"
+    safe_name = qualname.replace(".", "_")
+    verdict_path = gate_dir / f"{safe_name}.json"
+    print(f"  verdict written to {verdict_path}")
+
+    if not verdict["accepted"]:
+        sys.exit(1)
 
 
 def _cmd_report(args: argparse.Namespace) -> None:  # noqa: ARG001
@@ -193,7 +219,14 @@ def main() -> None:
         help="Head git ref (default: HEAD).",
     )
 
-    sub.add_parser("gate", help="Validate a witness file.")
+    gate_parser = sub.add_parser("gate", help="Validate a witness file.")
+    gate_parser.add_argument("witness", metavar="WITNESS", help="Path to the witness .py file.")
+    gate_parser.add_argument(
+        "--target",
+        required=True,
+        metavar="QUALNAME",
+        help="Fully-qualified function name, e.g. tabulate._is_file.",
+    )
     sub.add_parser("report", help="Generate HTML report.")
 
     args = parser.parse_args()

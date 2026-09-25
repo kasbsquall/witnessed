@@ -93,6 +93,52 @@ def _module_prefix(py_file: Path, package_dir: Path) -> str:
     return ".".join(parts) + "." if parts else ""
 
 
+def units_from_source(source: str, rel_file: str, package_dir_rel: str) -> list[Unit]:
+    """Parse *source* text and return units as if it lived at *rel_file*.
+
+    *rel_file* is the file path relative to the repo root (forward slashes).
+    *package_dir_rel* is the package directory path relative to the repo root
+    (forward slashes), used to compute the module prefix.
+
+    The module prefix is computed the same way as ``_module_prefix``: by
+    treating *rel_file* as relative to the parent of *package_dir_rel*.
+    """
+    try:
+        tree = ast.parse(source, filename=rel_file)
+    except SyntaxError:
+        return []
+
+    # Reconstruct Path objects so we can reuse _module_prefix logic.
+    # We use PurePosixPath arithmetic on string parts to stay cross-platform.
+    rel_parts = rel_file.replace("\\", "/").split("/")
+    pkg_parts = package_dir_rel.replace("\\", "/").rstrip("/").split("/")
+
+    # The module prefix is derived from rel_file relative to package_dir.parent.
+    # package_dir.parent has one fewer component than package_dir.
+    pkg_parent_parts = pkg_parts[:-1]  # e.g. ["sample", "tabulate"]
+
+    # Strip the pkg_parent prefix from rel_parts.
+    if rel_parts[: len(pkg_parent_parts)] == pkg_parent_parts:
+        suffix_parts = rel_parts[len(pkg_parent_parts) :]
+    else:
+        suffix_parts = rel_parts
+
+    # Remove .py extension from the final component.
+    if suffix_parts:
+        last = suffix_parts[-1]
+        if last.endswith(".py"):
+            last = last[:-3]
+        suffix_parts = suffix_parts[:-1] + [last]
+        if suffix_parts[-1] == "__init__":
+            suffix_parts = suffix_parts[:-1]
+
+    mod_prefix = ".".join(suffix_parts) + "." if suffix_parts else ""
+
+    results: list[Unit] = []
+    _collect(tree.body, mod_prefix, rel_file, results)
+    return results
+
+
 def enumerate_units(package_dir: Path, repo_root: Path | None = None) -> list[Unit]:
     """Return one Unit per FunctionDef/AsyncFunctionDef found under *package_dir*.
 
@@ -108,14 +154,9 @@ def enumerate_units(package_dir: Path, repo_root: Path | None = None) -> list[Un
     results: list[Unit] = []
 
     for py_file in sorted(package_dir.rglob("*.py")):
-        source = py_file.read_text(encoding="utf-8")
-        try:
-            tree = ast.parse(source, filename=str(py_file))
-        except SyntaxError:
-            continue
-
         rel_file = py_file.relative_to(repo_root).as_posix()
-        mod_prefix = _module_prefix(py_file, package_dir)
-        _collect(tree.body, mod_prefix, rel_file, results)
+        pkg_dir_rel = package_dir.relative_to(repo_root).as_posix()
+        source = py_file.read_text(encoding="utf-8")
+        results.extend(units_from_source(source, rel_file, pkg_dir_rel))
 
     return results
