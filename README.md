@@ -2,7 +2,9 @@
 
 Your agent says it tested the change. Witnessed shows which of the functions it touched nobody has ever seen running, and sends IBM Bob to find a witness for each one.
 
-Work in progress for the IBM Bob 2.0 Hackathon (lablab.ai, September 25 to 27, 2026). The specification is in [docs/SPEC.md](docs/SPEC.md).
+**Live report:** https://kasbsquall.github.io/witnessed/ (the real case below, no install needed).
+
+Built for the IBM Bob 2.0 Hackathon (lablab.ai, September 25 to 27, 2026). The specification is in [docs/SPEC.md](docs/SPEC.md).
 
 ## The real case
 
