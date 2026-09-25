@@ -1,0 +1,68 @@
+[build-system]
+requires = ["flit_core>=3.12", "flit_scm"]
+build-backend = "flit_scm:buildapi"
+
+[project]
+name = "tabulate"
+authors = [{name = "Sergey Astanin", email = "s.astanin@gmail.com"}]
+license = "MIT"
+license-files = ["LICENSE"]
+description = "Pretty-print tabular data"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries",
+]
+requires-python = ">=3.10"
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/astanin/python-tabulate"
+
+[project.optional-dependencies]
+widechars = ["wcwidth>=0.6.0"]
+
+[project.scripts]
+tabulate = "tabulate.cli:_main"
+
+[tool.flit.sdist]
+include = ["CHANGELOG", "test/", "tox.ini"]
+
+[tool.setuptools_scm]
+write_to = "tabulate/_version.py"
+
+[dependency-groups]
+dev = [
+    "build>=1.4.0",
+    "ruff>=0.15.4",
+    "pre_commit>=4.5.1",
+    "tox>=4.47.3",
+    "tox-uv>=1.0",
+    "twine>=6.2.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-v --doctest-modules --ignore=benchmark --doctest-glob=README.md"
+
+[tool.ruff]
+line-length = 99
+exclude = ["tabulate/_version.py"]
+
+[tool.ruff.lint]
+extend-select = ["W", "B", "C4", "ISC", "I", "C90", "UP"]
+ignore = ["B905", "E721", "C901"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 22
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-sort-within-sections = true
+known-local-folder = ["common"]
