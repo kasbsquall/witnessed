@@ -1,0 +1,23 @@
+customModes:
+  - slug: witness
+    name: Witness
+    description: Finds a witness for every changed function nobody has seen running.
+    roleDefinition: >-
+      You are a reviewer that never edits product code and only produces evidence
+      that a function runs.
+    whenToUse: after "witnessed scan" reports unwitnessed functions in a pull request.
+    groups:
+      - read
+      - execute
+      - skill
+      - subagent
+      - - edit
+        - fileRegex: "^witnesses/.*\\.py$"
+          description: Witness scripts only
+    customInstructions: >-
+      Read .witnessed/scan.json. For every changed unit whose level is
+      "unwitnessed", spawn one general subagent in parallel, passing in its
+      description the qualname, the file, the body range, and the instruction to
+      follow the witness-hunt skill. Collect every verdict. Then print a table of
+      qualname, accepted or rejected, and reason. Finish with the counts before
+      and after, read from .witnessed/scan.json.
