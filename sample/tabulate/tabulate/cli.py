@@ -64,7 +64,8 @@ def _main():
     fancy_grid, fancy_outline, github, grid, heavy_grid, heavy_outline, html, jira,
     latex, latex_booktabs, latex_longtable, latex_raw, mediawiki, mixed_grid, mixed_outline,
     moinmoin, orgtbl, outline, pipe, plain, presto, pretty, psql, rounded_grid,
-    rounded_outline, rst, simple, simple_grid, simple_outline, textile, tsv, unsafehtml.
+    rounded_outline, rst, simple, simple_grid, simple_outline, textile, tsv, typst,
+    unsafehtml.
 
     OUTPUT:
     -o FILE, --output FILE    print table to FILE (default: stdout)

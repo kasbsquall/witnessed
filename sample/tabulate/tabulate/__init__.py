@@ -255,6 +255,19 @@ def _latex_line_begin_tabular(colwidths, colaligns, booktabs=False, longtable=Fa
     )
 
 
+def _typst_line_begin_table(colwidths, colaligns):
+    """Return the opening line of a Typst #table(...) expression."""
+    return f"#table(\n  columns: {len(colwidths)},"
+
+
+def _typst_row(is_header, cell_values, colwidths, colaligns):
+    """Return one row of a Typst table as a string of [cell] arguments."""
+    cells = ", ".join(f"[{v.strip()}]" for v in cell_values)
+    if is_header:
+        return f"  table.header({cells}),"
+    return f"  {cells},"
+
+
 def _asciidoc_row(is_header, *args):
     """handle header and data rows for asciidoc format"""
 
@@ -704,6 +717,16 @@ _table_formats = {
         datarow=partial(_asciidoc_row, False),
         padding=1,
         with_header_hide=["lineabove"],
+    ),
+    "typst": TableFormat(
+        lineabove=_typst_line_begin_table,
+        linebelowheader=None,
+        linebetweenrows=None,
+        linebelow=Line(")", "", "", ""),
+        headerrow=partial(_typst_row, True),
+        datarow=partial(_typst_row, False),
+        padding=0,
+        with_header_hide=None,
     ),
 }
 

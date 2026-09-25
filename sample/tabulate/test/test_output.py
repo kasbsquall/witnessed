@@ -2798,6 +2798,37 @@ def test_textile_with_center_align():
     assert_equal(expected, result)
 
 
+def test_typst():
+    "Output: typst with headers"
+    result = tabulate(_test_table, _test_table_headers, tablefmt="typst")
+    expected = "\n".join(
+        [
+            "#table(",
+            "  columns: 2,",
+            "  table.header([strings], [numbers]),",
+            "  [spam], [41.9999],",
+            "  [eggs], [451],",
+            ")",
+        ]
+    )
+    assert_equal(expected, result)
+
+
+def test_typst_headerless():
+    "Output: typst without headers"
+    result = tabulate(_test_table, tablefmt="typst")
+    expected = "\n".join(
+        [
+            "#table(",
+            "  columns: 2,",
+            "  [spam], [41.9999],",
+            "  [eggs], [451],",
+            ")",
+        ]
+    )
+    assert_equal(expected, result)
+
+
 def test_no_data():
     "Output: table with no data"
     expected = "\n".join(["strings    numbers", "---------  ---------"])
