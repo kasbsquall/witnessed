@@ -10,7 +10,7 @@ Upstream python-tabulate commit [c327d6c](https://github.com/astanin/python-tabu
 
 In the Witness mode, Bob spawned two parallel subagents and both witnesses passed the gate: 2 unwitnessed before, 0 after.
 
-The relevant branches are `hist/c327d6c-base` and `hist/c327d6c`.
+The branches are `hist/c327d6c-base` (tabulate at 164b367, the parent), `hist/c327d6c` (the upstream commit replayed unchanged, with its original author and message) and `hist/c327d6c-witnessed` (the two witnesses Bob wrote, on top).
 
 ## Reproduce in 60 seconds
 
@@ -18,16 +18,17 @@ The relevant branches are `hist/c327d6c-base` and `hist/c327d6c`.
 pip install -e .
 git checkout hist/c327d6c
 witnessed scan --base hist/c327d6c-base --head hist/c327d6c
+git restore --source=hist/c327d6c-witnessed witnesses
 witnessed gate witnesses/tabulate._read_jsonl_file.py --target tabulate._read_jsonl_file
 witnessed gate witnesses/tabulate._read_csv_file.py --target tabulate._read_csv_file
 witnessed report
 ```
 
-The report is written to `docs/report.html`.
+The scan prints "2 of 6 changed functions were never seen running", both gates print "accepted", and the report is written to `docs/report.html`.
 
 ## How Bob is used
 
-The `Witness` custom mode (defined in `.bob/custom_modes.yaml`) can edit only `witnesses/*.py`. It loads the `witness-hunt` skill and spawns one parallel subagent per unwitnessed function. Bob also wrote the code of this repository during the hackathon. The session transcripts are in `bob_sessions/`.
+The `Witness` custom mode (defined in `.bob/custom_modes.yaml`) can edit only `witnesses/*.py`. It loads the `witness-hunt` skill and spawns one parallel subagent per unwitnessed function. Bob also wrote the code of this repository during the hackathon. The task summary screenshots of every Bob session are in `bob_sessions/`.
 
 ## Evidence levels
 
@@ -53,7 +54,7 @@ A witness promotes a function to `agent_witnessed` only if all of the following 
 
 Rule 4 checks that the witness calls the target by name through the package path (e.g. `tabulate._is_file(...)` or `from tabulate import _is_file; _is_file(...)`). This resolves a name, not a binding. A witness can shadow the name, for example by assigning `_is_file = lambda x: True` before the call, and still satisfy rule 4 syntactically. The gate does not verify that the name was not rebound.
 
-Rule 2 is the defence against this: coverage measures which source lines inside the real function body executed. If the name was rebound to a different callable the original body lines will not appear in the coverage report and the gate will reject with `body_not_executed`. The combination of rule 4 (name check) and rule 2 (body coverage) makes it substantially harder to fool the gate, but a witness that replaces the body with identical source could still pass. The gate is a heuristic, not a proof.
+Rule 2 is the defence against this: coverage measures which source lines inside the real function body executed. If the name was rebound to a different callable the original body lines will not appear in the coverage report and the gate will reject with `body_not_executed`. The combination of rule 4 (name check) and rule 2 (body coverage) makes it substantially harder to fool the gate, but a witness that replaces the body with identical source could still pass. The gate is a heuristic.
 
 ## How it was validated
 
@@ -61,7 +62,7 @@ A function added and never called is reported as never seen running. Checking re
 
 ## How it differs from diff-cover
 
-diff-cover reports changed lines without coverage data for those lines. Witnessed works per function body, separates test runs from real-world use, and asks an agent for evidence that has to pass a six-rule gate. The result is a per-function verdict, not a line percentage.
+diff-cover reports changed lines without coverage data for those lines. Witnessed works per function body, separates test runs from real-world use, and asks an agent for evidence that has to pass a six-rule gate. The result is a verdict for each function.
 
 ## Data and license
 
