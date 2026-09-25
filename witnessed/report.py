@@ -9,11 +9,22 @@ from pathlib import Path
 
 # Level display config: (label, fill_color, outline_only)
 _LEVEL_STYLE: dict[str, tuple[str, str, bool]] = {
-    "used":            ("used in real runs",          "#F2B544", False),
-    "tested":          ("only by tests",              "#8A7A55", False),
-    "agent_witnessed": ("witnessed by an agent",      "#F2B544", True),
-    "unwitnessed":     ("never seen running",         "#333333", True),
+    "used":            ("used in real runs",              "#CFC9BC", False),
+    "tested":          ("only by tests",                  "#8A7A55", False),
+    "agent_witnessed": ("never ran, now witnessed by Bob","#F2B544", True),
+    "unwitnessed":     ("never seen running",             "#E0765A", True),
 }
+
+# Six gate rules in the order the gate evaluates them.
+_GATE_RULES: list[tuple[str, str]] = [
+    ("nonzero_exit",      "exits with code 0"),
+    ("timeout",           "completes within 30 seconds"),
+    ("body_not_executed", "executes the function body"),
+    ("target_modified",   "does not modify the target file"),
+    ("no_call_site",      "contains a call to the target"),
+    ("patches_target",    "does not patch the target module"),
+    ("no_assertion",      "asserts something about the return value"),
+]
 
 
 def _head_commit_message(head_sha: str, repo_root: Path) -> str:
@@ -27,6 +38,56 @@ def _head_commit_message(head_sha: str, repo_root: Path) -> str:
         )
         if result.returncode == 0:
             return result.stdout.strip()
+    except Exception:
+        pass
+    return ""
+
+
+def _parse_git_trailers(commit_message: str) -> dict[str, str]:
+    """Return a dict of trailer key -> value parsed from commit_message.
+
+    Parses lines of the form "Key: value" at the end of the commit message,
+    which is the git trailer convention.
+    """
+    trailers: dict[str, str] = {}
+    if not commit_message:
+        return trailers
+    # Trailers appear after the last blank line in the message body.
+    lines = commit_message.splitlines()
+    # Walk from the end, collecting "Key: value" lines until a non-trailer line.
+    for line in reversed(lines):
+        line = line.strip()
+        if not line:
+            continue
+        if ": " in line:
+            key, _, value = line.partition(": ")
+            # Git trailer keys are words (letters, digits, hyphens).
+            if all(c.isalnum() or c == "-" for c in key):
+                trailers[key] = value.strip()
+            else:
+                break
+        else:
+            break
+    return trailers
+
+
+def _remote_url(repo_root: Path) -> str:
+    """Return the https remote URL for origin, or empty string."""
+    try:
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            url = result.stdout.strip()
+            # Convert SSH git@github.com:org/repo.git to https.
+            if url.startswith("git@"):
+                url = url.replace(":", "/", 1).replace("git@", "https://", 1)
+            if url.endswith(".git"):
+                url = url[:-4]
+            return url
     except Exception:
         pass
     return ""
@@ -58,10 +119,60 @@ def _escape(text: str) -> str:
     )
 
 
+def _read_witness_source(witness_file: str, repo_root: Path | None) -> str:
+    """Return the source text of the witness file, or empty string."""
+    if not witness_file or repo_root is None:
+        return ""
+    try:
+        p = repo_root / witness_file
+        if p.exists():
+            return p.read_text(encoding="utf-8")
+    except Exception:
+        pass
+    return ""
+
+
+def _gate_rules_html(verdict: dict) -> str:
+    """Return an HTML list of the six gate rules with pass/fail icons."""
+    reason = verdict.get("reason")
+    accepted = verdict.get("accepted", False)
+    lines = []
+    for rule_key, rule_desc in _GATE_RULES:
+        if accepted:
+            icon = "&#10003;"
+            color = "var(--lamp)"
+        elif reason == rule_key:
+            icon = "&#10007;"
+            color = "var(--alert)"
+        else:
+            # Rules after the first failure are not evaluated.
+            failed_idx = next(
+                (i for i, (k, _) in enumerate(_GATE_RULES) if k == reason), None
+            )
+            cur_idx = next(
+                (i for i, (k, _) in enumerate(_GATE_RULES) if k == rule_key), 0
+            )
+            if failed_idx is not None and cur_idx > failed_idx:
+                icon = "&mdash;"
+                color = "var(--muted)"
+            else:
+                icon = "&#10003;"
+                color = "var(--lamp)"
+        lines.append(
+            f'<li style="color:{color}">'
+            f'<span style="font-family:monospace">{icon}</span> {_escape(rule_desc)}'
+            f"</li>"
+        )
+    return "<ul style=\"list-style:none;padding:0;margin:4px 0 0 0;font-size:12px\">" + "".join(lines) + "</ul>"
+
+
 def build_report(
     scan_data: dict,
     gate_verdicts: dict[str, dict],
     commit_message: str,
+    *,
+    repo_root: Path | None = None,
+    remote_url: str = "",
 ) -> str:
     """Return the full HTML string for the report."""
     counts_after: dict[str, int] = scan_data.get("counts", {})
@@ -80,6 +191,40 @@ def build_report(
     counts_tested = counts_after.get("tested", 0)
     counts_agent = counts_after.get("agent_witnessed", 0)
     counts_unwit = counts_after.get("unwitnessed", 0)
+
+    # Before counts for the table (agent_witnessed were unwitnessed before).
+    before_used = counts_used
+    before_tested = counts_tested
+    before_agent = 0
+    before_unwit = before_unwitnessed
+
+    # ------------------------------------------------------------------
+    # Parse upstream trailers from the commit message.
+    # ------------------------------------------------------------------
+    trailers = _parse_git_trailers(commit_message)
+    upstream_repo = trailers.get("Upstream-Repo", "")
+    upstream_commit = trailers.get("Upstream-Commit", "")
+
+    # ------------------------------------------------------------------
+    # Header meta line: show upstream repo+commit if available.
+    # ------------------------------------------------------------------
+    meta_parts = []
+    upstream_link_html = ""
+    if upstream_repo and upstream_commit:
+        short_upstream = upstream_commit[:7]
+        repo_name = upstream_repo.rstrip("/").split("/")[-1]
+        upstream_url = f"{upstream_repo.rstrip('/')}/commit/{upstream_commit}"
+        upstream_link_html = (
+            f'<a href="{_escape(upstream_url)}" style="color:inherit;text-decoration:none">'
+            f"{_escape(repo_name)}, upstream {_escape(short_upstream)}"
+            f"</a>"
+        )
+        meta_parts.append(upstream_link_html)
+    elif short_sha:
+        meta_parts.append(_escape(short_sha))
+    if sample_name:
+        meta_parts.append(_escape(sample_name))
+    meta_line = "  /  ".join(meta_parts) if meta_parts else ""
 
     # ------------------------------------------------------------------
     # Build cell HTML for each changed function.
@@ -104,14 +249,12 @@ def build_report(
         gate_reason = verdict.get("reason") if verdict else None
 
         short_name = qualname.split(".")[-1] if "." in qualname else qualname
-        seen_text = ", ".join(seen_by) if seen_by else "none"
 
-        gate_html = ""
+        # "seen by" for agent_witnessed shows IBM Bob witness.
         if level == "agent_witnessed":
-            gate_status = "accepted" if gate_accepted else f"rejected: {gate_reason}"
-            gate_html = f"""
-              <dt>witness file</dt><dd>{_escape(witness_file)}</dd>
-              <dt>gate verdict</dt><dd>{_escape(gate_status)}</dd>"""
+            seen_text = "an IBM Bob witness (gate accepted)"
+        else:
+            seen_text = ", ".join(seen_by) if seen_by else "none"
 
         stagger_idx = min(i, 7)
         is_default = "true" if i == first_unwitnessed_idx else "false"
@@ -136,14 +279,45 @@ def build_report(
     commit_msg_html = _escape(commit_message) if commit_message else "(no commit message)"
 
     # ------------------------------------------------------------------
-    # Header meta line
+    # Detail panel extra rows for agent_witnessed cells (rendered via JS).
+    # Build per-cell witness source and gate rules HTML encoded as data attributes.
     # ------------------------------------------------------------------
-    meta_parts = []
-    if short_sha:
-        meta_parts.append(_escape(short_sha))
-    if sample_name:
-        meta_parts.append(_escape(sample_name))
-    meta_line = "  /  ".join(meta_parts) if meta_parts else ""
+    # We embed witness source and gate rules in hidden <div> elements keyed by index.
+    witness_panels_html = ""
+    for i, rec in enumerate(changed):
+        qualname = rec.get("qualname", "")
+        level = rec.get("level", "unwitnessed")
+        if level != "agent_witnessed":
+            continue
+        verdict = gate_verdicts.get(qualname, {})
+        if not verdict:
+            continue
+        witness_file = verdict.get("witness", "")
+        witness_src = _read_witness_source(witness_file, repo_root) if repo_root else ""
+        rules_html = _gate_rules_html(verdict)
+        src_html = (
+            f'<pre class="witness-src">{_escape(witness_src)}</pre>'
+            if witness_src
+            else ""
+        )
+        witness_panels_html += (
+            f'<div id="wp-{i}" hidden>'
+            f"{src_html}"
+            f"{rules_html}"
+            f"</div>"
+        )
+
+    # ------------------------------------------------------------------
+    # Footer remote link.
+    # ------------------------------------------------------------------
+    if remote_url:
+        footer_link_html = (
+            f'<a href="{_escape(remote_url)}" style="color:var(--muted);text-decoration:underline">'
+            f"{_escape(remote_url)}"
+            f"</a> &nbsp;&middot;&nbsp; "
+        )
+    else:
+        footer_link_html = ""
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -162,7 +336,9 @@ def build_report(
   --muted: #8B9097;
   --dim: #3A4149;
   --lamp: #F2B544;
+  --alert: #E0765A;
   --tested: #8A7A55;
+  --used: #CFC9BC;
 }}
 *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 html {{ background: var(--ink); color: var(--text); }}
@@ -189,7 +365,7 @@ body {{
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 56px;
+  margin-bottom: 8px;
 }}
 .header__brand {{
   display: flex;
@@ -211,11 +387,18 @@ body {{
   letter-spacing: 0.16em;
   color: var(--muted);
 }}
+.header__tagline {{
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 48px;
+  line-height: 1.5;
+}}
 
 /* ================================================================
    HERO
    ================================================================ */
-.hero {{ margin-bottom: 64px; }}
+.hero {{ margin-bottom: 64px; display: flex; gap: 48px; flex-wrap: wrap; align-items: flex-end; }}
+.hero__block {{ min-width: 0; }}
 .hero__label {{
   font-size: 12px;
   text-transform: uppercase;
@@ -232,10 +415,11 @@ body {{
   font-variant-numeric: tabular-nums lining-nums slashed-zero;
   margin-bottom: 8px;
 }}
-.hero__count .n-lamp {{ color: var(--lamp); }}
-.hero__count .n-text {{ color: var(--text); }}
-.hero__after {{
-  font-size: 14px;
+.hero__count .n-alert {{ color: var(--alert); }}
+.hero__count .n-lamp  {{ color: var(--lamp); }}
+.hero__count .n-text  {{ color: var(--text); }}
+.hero__sublabel {{
+  font-size: 13px;
   color: var(--muted);
   font-variant-numeric: tabular-nums lining-nums slashed-zero;
 }}
@@ -262,10 +446,10 @@ body {{
   border-radius: 3px;
   flex-shrink: 0;
 }}
-.legend__swatch--used    {{ background: var(--lamp); border: 1.5px solid var(--lamp); }}
+.legend__swatch--used    {{ background: var(--used);   border: 1.5px solid var(--used); }}
 .legend__swatch--tested  {{ background: var(--tested); border: 1.5px solid var(--tested); }}
-.legend__swatch--agent   {{ background: var(--cell); border: 1.5px solid var(--lamp); }}
-.legend__swatch--unwit   {{ background: var(--cell); border: 1.5px dashed var(--muted); }}
+.legend__swatch--agent   {{ background: var(--cell);   border: 1.5px solid var(--lamp); }}
+.legend__swatch--unwit   {{ background: var(--cell);   border: 1.5px dashed var(--alert); }}
 
 /* ================================================================
    CELLS GRID
@@ -307,20 +491,20 @@ body {{
 .cell--used, .cell--tested {{
   color: var(--ink);
 }}
-.cell--used   {{ background: var(--lamp);   border: 1.5px solid var(--lamp); }}
+.cell--used   {{ background: var(--used);   border: 1.5px solid var(--used); }}
 .cell--tested {{ background: var(--tested); border: 1.5px solid var(--tested); }}
 /* outlined cells */
 .cell--agent_witnessed, .cell--unwitnessed {{
   color: var(--text);
 }}
 .cell--agent_witnessed {{ background: var(--cell); border: 1.5px solid var(--lamp); }}
-.cell--unwitnessed     {{ background: var(--cell); border: 1.5px dashed var(--muted); }}
+.cell--unwitnessed     {{ background: var(--cell); border: 1.5px dashed var(--alert); }}
 
 /* hover */
-.cell--used:hover            {{ border-color: #f5c76a; }}
+.cell--used:hover            {{ border-color: #ddd4c3; }}
 .cell--tested:hover          {{ border-color: #a08e6e; }}
 .cell--agent_witnessed:hover {{ border-color: #f5c76a; }}
-.cell--unwitnessed:hover     {{ border-color: #a8b0b8; }}
+.cell--unwitnessed:hover     {{ border-color: #e88e76; }}
 
 /* active */
 .cell:active {{ transform: scale(0.98); }}
@@ -332,10 +516,10 @@ body {{
 }}
 
 /* selected */
-.cell[aria-pressed="true"].cell--used            {{ background: #f5c76a; border-color: #f5c76a; }}
+.cell[aria-pressed="true"].cell--used            {{ background: #ddd4c3; border-color: #ddd4c3; }}
 .cell[aria-pressed="true"].cell--tested          {{ background: #a08e6e; border-color: #a08e6e; }}
 .cell[aria-pressed="true"].cell--agent_witnessed {{ border-color: #f5c76a; border-width: 2px; }}
-.cell[aria-pressed="true"].cell--unwitnessed     {{ border-color: #a8b0b8; border-width: 2px; }}
+.cell[aria-pressed="true"].cell--unwitnessed     {{ border-color: #e88e76; border-width: 2px; }}
 
 /* ================================================================
    DETAIL PANEL
@@ -363,6 +547,20 @@ body {{
   font-size: 13px;
   color: var(--text);
   overflow-wrap: anywhere;
+}}
+.witness-src {{
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 12px;
+  margin-top: 8px;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 320px;
+  overflow-y: auto;
 }}
 
 /* ================================================================
@@ -408,10 +606,23 @@ body {{
   font-size: 13px;
   font-variant-numeric: tabular-nums lining-nums slashed-zero;
 }}
+.counts-table th {{
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-align: right;
+  padding: 0 0 6px 12px;
+  font-weight: 400;
+}}
+.counts-table th:first-child {{ text-align: left; padding-left: 0; }}
 .counts-table td {{ padding: 3px 0; }}
-.counts-table td:first-child {{ color: var(--muted); padding-right: 24px; }}
-.counts-table td:last-child {{ text-align: right; color: var(--text); }}
+.counts-table td:first-child {{ color: var(--muted); padding-right: 12px; }}
+.counts-table td:nth-child(2) {{ text-align: right; padding-right: 12px; color: var(--alert); }}
+.counts-table td:nth-child(3) {{ text-align: right; color: var(--lamp); }}
 .counts-table tr.total td {{ border-top: 1px solid var(--line); padding-top: 8px; }}
+.counts-table tr.total td:nth-child(2),
+.counts-table tr.total td:nth-child(3) {{ color: var(--text); }}
 
 /* ================================================================
    FOOTER
@@ -471,14 +682,24 @@ body {{
     </div>
     {f'<span class="header__meta">{meta_line}</span>' if meta_line else ""}
   </header>
+  <p class="header__tagline block" style="--delay:20">Witnessed finds the functions a change touched that nobody has ever seen running, and sends IBM Bob to write a witness for each one: a small script that calls the function and must pass a six-rule gate.</p>
 
   <!-- HERO -->
   <section class="hero block" style="--delay:60" aria-label="Coverage summary">
-    <p class="hero__label">changed functions never seen running</p>
-    <p class="hero__count nums" aria-label="{before_unwitnessed} of {total} changed functions were never seen running">
-      <span class="n-lamp">{before_unwitnessed}</span><span class="n-text"> of {total}</span>
-    </p>
-    <p class="hero__after nums">after Bob's witnesses: {after_unwitnessed} of {total}</p>
+    <div class="hero__block">
+      <p class="hero__label">Before Bob</p>
+      <p class="hero__count nums" aria-label="Before Bob: {before_unwitnessed} of {total} changed functions had never run">
+        <span class="n-alert">{before_unwitnessed}</span><span class="n-text"> of {total}</span>
+      </p>
+      <p class="hero__sublabel">changed functions had never run</p>
+    </div>
+    <div class="hero__block">
+      <p class="hero__label">After Bob</p>
+      <p class="hero__count nums" aria-label="After Bob: {after_unwitnessed} of {total} still unwitnessed">
+        <span class="n-lamp">{after_unwitnessed}</span><span class="n-text"> of {total}</span>
+      </p>
+      <p class="hero__sublabel">still unwitnessed</p>
+    </div>
     <!-- search text for tests -->
     <span hidden>{before_unwitnessed} of {total} changed functions were never seen running</span>
     <span hidden>after gate: {after_unwitnessed} of {total} still unwitnessed</span>
@@ -496,7 +717,7 @@ body {{
     </div>
     <div class="legend__item">
       <span class="legend__swatch legend__swatch--agent" aria-hidden="true"></span>
-      <span>witnessed by an agent</span>
+      <span>never ran, now witnessed by Bob</span>
     </div>
     <div class="legend__item">
       <span class="legend__swatch legend__swatch--unwit" aria-hidden="true"></span>
@@ -519,7 +740,11 @@ body {{
       <dt id="d-witness-label" hidden>witness file</dt><dd id="d-witness" hidden></dd>
       <dt id="d-gate-label" hidden>gate verdict</dt><dd id="d-gate" hidden></dd>
     </dl>
+    <div id="d-witness-extra" hidden></div>
   </div>
+
+  <!-- hidden witness source panels -->
+  {witness_panels_html}
 
   <!-- CONTEXT -->
   <div class="context block" style="--delay:300">
@@ -530,17 +755,22 @@ body {{
     <div class="context__card">
       <span class="context__label">What actually ran</span>
       <table class="counts-table nums">
-        <tr><td>used in real runs</td><td>{counts_used}</td></tr>
-        <tr><td>only by tests</td><td>{counts_tested}</td></tr>
-        <tr><td>witnessed by an agent</td><td>{counts_agent}</td></tr>
-        <tr><td>never seen running</td><td>{counts_unwit}</td></tr>
-        <tr class="total"><td>total changed</td><td>{total}</td></tr>
+        <tr>
+          <th></th>
+          <th>before</th>
+          <th>after</th>
+        </tr>
+        <tr><td>used in real runs</td><td>{before_used}</td><td>{counts_used}</td></tr>
+        <tr><td>only by tests</td><td>{before_tested}</td><td>{counts_tested}</td></tr>
+        <tr><td>never ran, now witnessed</td><td>{before_agent}</td><td>{counts_agent}</td></tr>
+        <tr><td>never seen running</td><td>{before_unwit}</td><td>{counts_unwit}</td></tr>
+        <tr class="total"><td>total changed</td><td>{total}</td><td>{total}</td></tr>
       </table>
     </div>
   </div>
 
   <!-- FOOTER -->
-  <footer class="footer block" style="--delay:360">Made with IBM Bob</footer>
+  <footer class="footer block" style="--delay:360">{footer_link_html}Made with IBM Bob</footer>
 
 </div>
 
@@ -556,6 +786,7 @@ body {{
   var dWit     = document.getElementById('d-witness');
   var dGLabel  = document.getElementById('d-gate-label');
   var dGate    = document.getElementById('d-gate');
+  var dExtra   = document.getElementById('d-witness-extra');
 
   function selectCell(btn) {{
     cells.forEach(function (c) {{ c.setAttribute('aria-pressed', 'false'); }});
@@ -576,6 +807,16 @@ body {{
     }} else {{
       dGLabel.hidden = true;  dGate.hidden = true;  dGate.textContent = '';
     }}
+    // Show witness source and gate rules if available.
+    var idx = btn.id.replace('btn-', '');
+    var wp = document.getElementById('wp-' + idx);
+    if (wp) {{
+      dExtra.hidden = false;
+      dExtra.innerHTML = wp.innerHTML;
+    }} else {{
+      dExtra.hidden = true;
+      dExtra.innerHTML = '';
+    }}
   }}
 
   cells.forEach(function (btn) {{
@@ -594,7 +835,7 @@ body {{
 
 
 def generate_report(repo_root: Path) -> Path:
-    """Read inputs, build the HTML, write docs/report.html, and return the path."""
+    """Read inputs, build the HTML, write docs/report.html and docs/index.html, and return the report path."""
     witnessed_dir = repo_root / ".witnessed"
     scan_path = witnessed_dir / "scan.json"
     gate_dir = witnessed_dir / "gate"
@@ -604,11 +845,19 @@ def generate_report(repo_root: Path) -> Path:
 
     head_sha = scan_data.get("head", "HEAD")
     commit_message = _head_commit_message(head_sha, repo_root)
+    remote_url = _remote_url(repo_root)
 
-    html = build_report(scan_data, gate_verdicts, commit_message)
+    html = build_report(
+        scan_data,
+        gate_verdicts,
+        commit_message,
+        repo_root=repo_root,
+        remote_url=remote_url,
+    )
 
     out_dir = repo_root / "docs"
     out_dir.mkdir(exist_ok=True)
     out_path = out_dir / "report.html"
     out_path.write_text(html, encoding="utf-8")
+    (out_dir / "index.html").write_text(html, encoding="utf-8")
     return out_path
