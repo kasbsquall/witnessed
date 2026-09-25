@@ -1,4 +1,4 @@
-"""Tests for witnessed.observe — baseline execution and level assignment."""
+"""Tests for witnessed.observe: baseline execution and level assignment."""
 
 from __future__ import annotations
 

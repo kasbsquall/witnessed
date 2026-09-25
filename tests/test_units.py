@@ -31,7 +31,7 @@ def _get(units: list[Unit], qualname: str) -> Unit:
 
 
 # ---------------------------------------------------------------------------
-# Plain function — qualname now includes module prefix
+# Plain function: qualname now includes module prefix
 # ---------------------------------------------------------------------------
 
 
@@ -96,7 +96,7 @@ def test_nested_function(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Decorated function — body_start must be after decorator and signature
+# Decorated function: body_start must be after decorator and signature
 # ---------------------------------------------------------------------------
 
 
@@ -135,8 +135,8 @@ def test_one_line_function(tmp_path: Path) -> None:
     pkg = _write_pkg(tmp_path, source)
     units = enumerate_units(pkg, repo_root=tmp_path)
     u = _get(units, "pkg.mod.f")
-    # body_start == def_line for a one-liner because the entire function —
-    # signature and body — lives on the same physical line.  The spec says the
+    # body_start == def_line for a one-liner because the entire function,
+    # signature and body, lives on the same physical line.  The spec says the
     # def line "runs at import time and never counts", but for a one-liner that
     # is a moot point: when the body executes the def line has already finished,
     # and coverage marks that single line as executed during the call.  Using

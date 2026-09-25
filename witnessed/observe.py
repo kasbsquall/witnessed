@@ -95,38 +95,46 @@ def _run_baseline(
         tf.write(rcfile_content)
         rcfile = tf.name
 
+    log_path = witnessed_dir / f"{cfg.id}.log"
+
     try:
-        for cmd_args in cfg.commands:
-            # In parallel mode coverage run always writes a new suffixed file;
-            # do not use --append (it is incompatible with parallel mode).
-            coverage_cmd = [
-                sys.executable,
-                "-m",
-                "coverage",
-                "run",
-                f"--rcfile={rcfile}",
-                f"--data-file={cov_file}",
-            ]
-            coverage_cmd.extend(cmd_args)
+        with log_path.open("w", encoding="utf-8") as log_fh:
+            for cmd_args in cfg.commands:
+                # In parallel mode coverage run always writes a new suffixed file;
+                # do not use --append (it is incompatible with parallel mode).
+                coverage_cmd = [
+                    sys.executable,
+                    "-m",
+                    "coverage",
+                    "run",
+                    f"--rcfile={rcfile}",
+                    f"--data-file={cov_file}",
+                ]
+                coverage_cmd.extend(cmd_args)
 
-            result = subprocess.run(coverage_cmd, cwd=run_cwd)
-            if result.returncode != 0 and overall_exit == 0:
-                overall_exit = result.returncode
+                result = subprocess.run(
+                    coverage_cmd,
+                    cwd=run_cwd,
+                    stdout=log_fh,
+                    stderr=log_fh,
+                )
+                if result.returncode != 0 and overall_exit == 0:
+                    overall_exit = result.returncode
 
-        # Merge all parallel data files (from this process and subprocesses)
-        # into the single final data file.
-        subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "coverage",
-                "combine",
-                f"--rcfile={rcfile}",
-                f"--data-file={cov_file}",
-            ],
-            cwd=run_cwd,
-            capture_output=True,
-        )
+            # Merge all parallel data files (from this process and subprocesses)
+            # into the single final data file.
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "coverage",
+                    "combine",
+                    f"--rcfile={rcfile}",
+                    f"--data-file={cov_file}",
+                ],
+                cwd=run_cwd,
+                capture_output=True,
+            )
     finally:
         Path(rcfile).unlink(missing_ok=True)
 

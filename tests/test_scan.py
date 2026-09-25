@@ -250,7 +250,7 @@ def test_changed_units_modified_subdirectory(tmp_path: Path) -> None:
     cu = result[0]
     assert cu.qualname == "mypkg.mod.compute", f"wrong qualname: {cu.qualname!r}"
     assert cu.change == "modified", (
-        f"expected 'modified' but got {cu.change!r} — "
+        f"expected 'modified' but got {cu.change!r}: "
         "qualname mismatch between head and base enumeration"
     )
 
@@ -265,13 +265,13 @@ def _setup_scan_repo(tmp_path: Path) -> tuple[Path, Path, str, str]:
     """Build a repo suitable for the scan integration test.
 
     Layout:
-      mypkg/__init__.py   — two functions: alpha (exercised), beta (not)
-      witnessed.toml       — a 'tested' baseline that calls only alpha
-      test_suite.py        — pytest that calls alpha only
+      mypkg/__init__.py   : two functions: alpha (exercised), beta (not)
+      witnessed.toml       : a 'tested' baseline that calls only alpha
+      test_suite.py        : pytest that calls alpha only
 
     Commits:
-      base  — empty package
-      head  — adds alpha and beta
+      base  : empty package
+      head  : adds alpha and beta
     """
     repo = _make_repo(tmp_path)
 

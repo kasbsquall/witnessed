@@ -55,9 +55,9 @@ def _is_target_call(node: ast.expr, qualname: str) -> bool:
     """Return True if *node* is a call to the target identified by *qualname*.
 
     Handles:
-    - ``pkg.func(...)``         — attribute chain matching qualname
-    - ``func(...)``             — bare name matching the last component
-    - ``obj.method(...)``       — method call matching the last component
+    - ``pkg.func(...)``         : attribute chain matching qualname
+    - ``func(...)``             : bare name matching the last component
+    - ``obj.method(...)``       : method call matching the last component
     """
     if not isinstance(node, ast.Call):
         return False
@@ -156,7 +156,7 @@ def _is_setattr_on_module(call: ast.Call, pkg: str) -> bool:
     if isinstance(func, ast.Name) and func.id == "setattr":
         if call.args and isinstance(call.args[0], ast.Name):
             return call.args[0].id == pkg
-    # monkeypatch.setattr(mod, ...) — first arg is the module name
+    # monkeypatch.setattr(mod, ...) -- first arg is the module name
     if isinstance(func, ast.Attribute) and func.attr == "setattr":
         if call.args and isinstance(call.args[0], ast.Name):
             return call.args[0].id == pkg

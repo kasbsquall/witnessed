@@ -54,7 +54,7 @@ def _resolve_ref(ref: str, repo_root: Path) -> str:
 def _cmd_scan(args: argparse.Namespace) -> None:
     from .diff import changed_units
     from .observe import load_baselines, run_baselines
-    from .verdict import Level, level_label, pr_verdict
+    from .verdict import Level, level_label, pr_verdict  # level_label used in comment table
 
     repo_root = Path.cwd()
     # TODO: make package_dir configurable; default to the tabulate sample.
@@ -151,14 +151,12 @@ def _cmd_scan(args: argparse.Namespace) -> None:
     comment_path = witnessed_dir / "comment.md"
     comment_path.write_text("\n".join(comment_lines) + "\n", encoding="utf-8")
 
-    # 7. Determine and print verdict.
+    # 7. Print one-liner and comment path.
     levels: list[Level] = [rec["level"] for rec in changed_records]  # type: ignore[misc]
     verdict = pr_verdict(levels)
-    verdict_label = level_label(verdict)
 
-    print(f"scan.json written to {scan_path}")
+    print(f"{unwitnessed} of {total} changed functions were never seen running.")
     print(f"comment.md written to {comment_path}")
-    print(f"verdict: {verdict} — {verdict_label}")
 
 
 def _cmd_gate(args: argparse.Namespace) -> None:
@@ -193,8 +191,11 @@ def _cmd_gate(args: argparse.Namespace) -> None:
 
 
 def _cmd_report(args: argparse.Namespace) -> None:  # noqa: ARG001
-    print("not implemented")
-    sys.exit(2)
+    from .report import generate_report
+
+    repo_root = Path.cwd()
+    out_path = generate_report(repo_root)
+    print(f"report written to {out_path}")
 
 
 def main() -> None:

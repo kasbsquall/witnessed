@@ -158,8 +158,8 @@ def changed_units(
         if not file_changes:
             continue
         # The span is def_line..body_end (inclusive); a change anywhere in the
-        # full span — including the def line itself for renames/signature changes
-        # — counts as touching this unit.
+        # full span, including the def line itself for renames/signature changes,
+        # counts as touching this unit.
         span = set(range(unit.def_line, unit.body_end + 1))
         if not span.intersection(file_changes):
             continue

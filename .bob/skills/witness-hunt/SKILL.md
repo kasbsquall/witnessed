@@ -15,7 +15,7 @@ any imports or helpers it needs to run. Do not read unrelated modules.
 ## 2. Write the witness
 
 Create `witnesses/<qualname>.py` (replacing dots in the qualname with slashes
-only for the directory portion — the file name is `<qualname>.py` with the full
+only for the directory portion. The file name is `<qualname>.py` with the full
 dotted name). The witness must:
 
 - Import the target through its package path (e.g. `from tabulate import tabulate`).
@@ -39,6 +39,6 @@ the gate again. Do not attempt a third run.
 
 Report exactly one of:
 
-- `ACCEPTED — <qualname>` with a one-line description of what was asserted.
-- `REJECTED — <qualname>: <reason>` with a one-line explanation of what the
+- `ACCEPTED: <qualname>` with a one-line description of what was asserted.
+- `REJECTED: <qualname>: <reason>` with a one-line explanation of what the
   gate found.

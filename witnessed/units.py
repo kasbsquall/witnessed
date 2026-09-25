@@ -10,7 +10,7 @@ class Unit:
     qualname: str   # e.g. "tabulate._is_file" or "tabulate.SomeClass.method"
     file: str       # path relative to repo root, forward slashes
     def_line: int
-    body_start: int  # node.body[0].lineno — first line of the body
+    body_start: int  # node.body[0].lineno: first line of the body
     body_end: int    # node.end_lineno
 
 

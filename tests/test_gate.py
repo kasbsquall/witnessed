@@ -93,7 +93,7 @@ def _run(tmp_path: Path, witness_src: str, qualname: str | None = None) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Honest witness — must pass
+# Honest witness: must pass
 # ---------------------------------------------------------------------------
 
 
@@ -295,7 +295,7 @@ def test_reject_no_call_site(tmp_path: Path) -> None:
             sys.path.insert(0, {str(tmp_path)!r})
             import mypkg
 
-            # Call via getattr — body executes but no syntactic call site.
+            # Call via getattr: body executes but no syntactic call site.
             fn = getattr(mypkg, "add")
             result = fn(1, 2)
             assert result == 3
@@ -327,7 +327,7 @@ def test_reject_patches_target(tmp_path: Path) -> None:
             result = mypkg.add(1, 2)
             assert result == 3
 
-            # Now patch the module attribute — this is what the gate must catch.
+            # Now patch the module attribute: this is what the gate must catch.
             mypkg.add = lambda a, b: a + b
         """,
     )
