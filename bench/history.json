@@ -1,0 +1,598 @@
+{
+  "upstream": "https://github.com/astanin/python-tabulate",
+  "range": "non-merge commits touching tabulate/ since 2022-05-20, up to 268615a",
+  "commits_in_range": 101,
+  "commits_skipped": 0,
+  "commits_measured_with_changed_functions": 88,
+  "commits_with_a_never_run_function": 2,
+  "changed_functions": 301,
+  "changed_functions_never_run": 4,
+  "records": [
+    {
+      "commit": "05e88d2",
+      "changed": 0
+    },
+    {
+      "commit": "d99d9ae",
+      "changed": 0
+    },
+    {
+      "commit": "6c48142",
+      "changed": 1,
+      "never": [],
+      "tests": "268 passed, 15 skipped, 2 deselected in 6.51s"
+    },
+    {
+      "commit": "a5e70e5",
+      "changed": 0
+    },
+    {
+      "commit": "20c6370",
+      "changed": 2,
+      "never": [],
+      "tests": "269 passed, 15 skipped, 2 deselected in 5.38s"
+    },
+    {
+      "commit": "e52c5ba",
+      "changed": 1,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 5.70s"
+    },
+    {
+      "commit": "69dc8ed",
+      "changed": 1,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 5.40s"
+    },
+    {
+      "commit": "ecb26e2",
+      "changed": 2,
+      "never": [],
+      "tests": "2 failed, 267 passed, 16 skipped, 2 deselected in 5.63s"
+    },
+    {
+      "commit": "fbdb1fd",
+      "changed": 1,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 7.18s"
+    },
+    {
+      "commit": "6ea172b",
+      "changed": 1,
+      "never": [],
+      "tests": "271 passed, 16 skipped, 2 deselected in 7.44s"
+    },
+    {
+      "commit": "ecbd67c",
+      "changed": 2,
+      "never": [],
+      "tests": "271 passed, 16 skipped, 2 deselected in 5.64s"
+    },
+    {
+      "commit": "a658c9f",
+      "changed": 70,
+      "never": [],
+      "tests": "2 failed, 267 passed, 16 skipped, 2 deselected in 6.08s"
+    },
+    {
+      "commit": "bd366f2",
+      "changed": 2,
+      "never": [],
+      "tests": "2 failed, 267 passed, 16 skipped, 2 deselected in 5.39s"
+    },
+    {
+      "commit": "15da626",
+      "changed": 1,
+      "never": [],
+      "tests": "2 failed, 267 passed, 16 skipped, 2 deselected in 5.98s"
+    },
+    {
+      "commit": "d354582",
+      "changed": 1,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 6.24s"
+    },
+    {
+      "commit": "22c7542",
+      "changed": 70,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 5.85s"
+    },
+    {
+      "commit": "9258744",
+      "changed": 1,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 5.68s"
+    },
+    {
+      "commit": "39813e2",
+      "changed": 1,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 5.65s"
+    },
+    {
+      "commit": "051cac7",
+      "changed": 1,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 5.57s"
+    },
+    {
+      "commit": "4cb9524",
+      "changed": 1,
+      "never": [],
+      "tests": "273 passed, 16 skipped, 2 deselected in 6.07s"
+    },
+    {
+      "commit": "af40a32",
+      "changed": 2,
+      "never": [],
+      "tests": "270 passed, 16 skipped, 2 deselected in 6.66s"
+    },
+    {
+      "commit": "96761ee",
+      "changed": 1,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 6.19s"
+    },
+    {
+      "commit": "d38740c",
+      "changed": 2,
+      "never": [],
+      "tests": "269 passed, 16 skipped, 2 deselected in 6.06s"
+    },
+    {
+      "commit": "0978de5",
+      "changed": 1,
+      "never": [],
+      "tests": "274 passed, 16 skipped, 2 deselected in 6.20s"
+    },
+    {
+      "commit": "b1ed1fd",
+      "changed": 1,
+      "never": [],
+      "tests": "275 passed, 16 skipped, 2 deselected in 5.85s"
+    },
+    {
+      "commit": "733be92",
+      "changed": 2,
+      "never": [],
+      "tests": "273 passed, 16 skipped, 2 deselected in 5.45s"
+    },
+    {
+      "commit": "36fb308",
+      "changed": 4,
+      "never": [],
+      "tests": "273 passed, 16 skipped, 2 deselected in 5.82s"
+    },
+    {
+      "commit": "a37d34a",
+      "changed": 3,
+      "never": [],
+      "tests": "273 passed, 16 skipped, 2 deselected in 5.85s"
+    },
+    {
+      "commit": "d19c2fb",
+      "changed": 1,
+      "never": [],
+      "tests": "2 failed, 273 passed, 16 skipped, 2 deselected in 5.75s"
+    },
+    {
+      "commit": "d27d366",
+      "changed": 1,
+      "never": [],
+      "tests": "1 failed, 274 passed, 16 skipped, 2 deselected in 5.94s"
+    },
+    {
+      "commit": "3c6e418",
+      "changed": 1,
+      "never": [],
+      "tests": "273 passed, 16 skipped, 2 deselected in 5.46s"
+    },
+    {
+      "commit": "92cb709",
+      "changed": 1,
+      "never": [],
+      "tests": "275 passed, 17 skipped, 2 deselected in 5.65s"
+    },
+    {
+      "commit": "e45cac1",
+      "changed": 1,
+      "never": [],
+      "tests": "275 passed, 17 skipped, 2 deselected in 6.75s"
+    },
+    {
+      "commit": "0655054",
+      "changed": 2,
+      "never": [],
+      "tests": "275 passed, 16 skipped, 2 deselected in 7.09s"
+    },
+    {
+      "commit": "ef4a407",
+      "changed": 1,
+      "never": [],
+      "tests": "273 passed, 16 skipped, 2 deselected in 5.69s"
+    },
+    {
+      "commit": "b49b98e",
+      "changed": 3,
+      "never": [],
+      "tests": "274 passed, 16 skipped, 2 deselected in 5.96s"
+    },
+    {
+      "commit": "277e649",
+      "changed": 1,
+      "never": [],
+      "tests": "274 passed, 16 skipped, 2 deselected in 5.36s"
+    },
+    {
+      "commit": "4a17bc7",
+      "changed": 1,
+      "never": [],
+      "tests": "274 passed, 16 skipped, 2 deselected in 5.45s"
+    },
+    {
+      "commit": "968f258",
+      "changed": 1,
+      "never": [],
+      "tests": "274 passed, 16 skipped, 2 deselected in 5.06s"
+    },
+    {
+      "commit": "4e97640",
+      "changed": 1,
+      "never": [],
+      "tests": "274 passed, 16 skipped, 2 deselected in 4.97s"
+    },
+    {
+      "commit": "2855363",
+      "changed": 1,
+      "never": [],
+      "tests": "278 passed, 16 skipped, 2 deselected in 5.51s"
+    },
+    {
+      "commit": "049d7d9",
+      "changed": 4,
+      "never": [],
+      "tests": "1 failed, 283 passed, 17 skipped, 2 deselected in 5.10s"
+    },
+    {
+      "commit": "09550a7",
+      "changed": 1,
+      "never": [],
+      "tests": "273 passed, 16 skipped, 2 deselected in 5.26s"
+    },
+    {
+      "commit": "1f49977",
+      "changed": 1,
+      "never": [],
+      "tests": "285 passed, 17 skipped, 2 deselected in 5.96s"
+    },
+    {
+      "commit": "813edee",
+      "changed": 1,
+      "never": [],
+      "tests": "285 passed, 17 skipped, 2 deselected in 5.85s"
+    },
+    {
+      "commit": "8c9c9e7",
+      "changed": 3,
+      "never": [],
+      "tests": "1 failed, 288 passed, 17 skipped, 2 deselected in 5.90s"
+    },
+    {
+      "commit": "b39a162",
+      "changed": 1,
+      "never": [],
+      "tests": "1 failed, 288 passed, 17 skipped, 2 deselected in 5.57s"
+    },
+    {
+      "commit": "cf45298",
+      "changed": 4,
+      "never": [],
+      "tests": "1 failed, 290 passed, 17 skipped, 2 deselected in 5.32s"
+    },
+    {
+      "commit": "232ed74",
+      "changed": 1,
+      "never": [],
+      "tests": "1 failed, 290 passed, 17 skipped, 2 deselected in 5.32s"
+    },
+    {
+      "commit": "787851f",
+      "changed": 2,
+      "never": [],
+      "tests": "1 failed, 292 passed, 17 skipped, 2 deselected in 5.07s"
+    },
+    {
+      "commit": "d29909b",
+      "changed": 1,
+      "never": [],
+      "tests": "1 failed, 291 passed, 17 skipped, 2 deselected in 4.92s"
+    },
+    {
+      "commit": "9dedd45",
+      "changed": 0
+    },
+    {
+      "commit": "f967017",
+      "changed": 3,
+      "never": [],
+      "tests": "1 failed, 295 passed, 17 skipped, 2 deselected in 4.84s"
+    },
+    {
+      "commit": "3fdc130",
+      "changed": 2,
+      "never": [],
+      "tests": "3 failed, 293 passed, 17 skipped, 2 deselected in 4.70s"
+    },
+    {
+      "commit": "bb1bf9f",
+      "changed": 1,
+      "never": [],
+      "tests": "1 failed, 292 passed, 17 skipped, 2 deselected in 4.82s"
+    },
+    {
+      "commit": "c59a5ff",
+      "changed": 1,
+      "never": [],
+      "tests": "1 failed, 295 passed, 17 skipped, 2 deselected in 4.93s"
+    },
+    {
+      "commit": "886e2ed",
+      "changed": 1,
+      "never": [],
+      "tests": "1 failed, 297 passed, 17 skipped, 2 deselected in 4.90s"
+    },
+    {
+      "commit": "f0a5df6",
+      "changed": 2,
+      "never": [],
+      "tests": "1 failed, 297 passed, 17 skipped, 2 deselected in 4.76s"
+    },
+    {
+      "commit": "d42acbe",
+      "changed": 1,
+      "never": [],
+      "tests": "298 passed, 17 skipped, 2 deselected in 4.77s"
+    },
+    {
+      "commit": "a3223ed",
+      "changed": 1,
+      "never": [],
+      "tests": "299 passed, 16 skipped, 2 deselected in 4.94s"
+    },
+    {
+      "commit": "e13a4d0",
+      "changed": 1,
+      "never": [],
+      "tests": "299 passed, 16 skipped, 2 deselected in 11.64s"
+    },
+    {
+      "commit": "87a9a4e",
+      "changed": 1,
+      "never": [],
+      "tests": "300 passed, 16 skipped, 2 deselected in 5.78s"
+    },
+    {
+      "commit": "4fa8639",
+      "changed": 5,
+      "never": [],
+      "tests": "301 passed, 16 skipped, 2 deselected in 5.13s"
+    },
+    {
+      "commit": "8ca340f",
+      "changed": 1,
+      "never": [],
+      "tests": "301 passed, 16 skipped, 2 deselected in 6.00s"
+    },
+    {
+      "commit": "b96c59a",
+      "changed": 2,
+      "never": [],
+      "tests": "301 passed, 16 skipped, 2 deselected in 5.96s"
+    },
+    {
+      "commit": "69f67cd",
+      "changed": 1,
+      "never": [],
+      "tests": "301 passed, 16 skipped, 2 deselected in 5.79s"
+    },
+    {
+      "commit": "13508e7",
+      "changed": 0
+    },
+    {
+      "commit": "76c3d37",
+      "changed": 1,
+      "never": [],
+      "tests": "301 passed, 16 skipped, 2 deselected in 5.20s"
+    },
+    {
+      "commit": "4d535af",
+      "changed": 4,
+      "never": [],
+      "tests": "301 passed, 16 skipped, 2 deselected in 5.72s"
+    },
+    {
+      "commit": "7bacc90",
+      "changed": 2,
+      "never": [],
+      "tests": "301 passed, 16 skipped, 2 deselected in 5.21s"
+    },
+    {
+      "commit": "37e1ed0",
+      "changed": 1,
+      "never": [],
+      "tests": "301 passed, 16 skipped, 2 deselected in 5.43s"
+    },
+    {
+      "commit": "37ac76e",
+      "changed": 0
+    },
+    {
+      "commit": "4a95974",
+      "changed": 14,
+      "never": [],
+      "tests": "301 passed, 16 skipped, 2 deselected in 7.10s"
+    },
+    {
+      "commit": "5768953",
+      "changed": 0
+    },
+    {
+      "commit": "032dc0d",
+      "changed": 1,
+      "never": [],
+      "tests": "302 passed, 16 skipped, 2 deselected in 6.42s"
+    },
+    {
+      "commit": "4c9a049",
+      "changed": 1,
+      "never": [],
+      "tests": "319 passed, 16 skipped, 2 deselected in 7.01s"
+    },
+    {
+      "commit": "3381cfc",
+      "changed": 1,
+      "never": [],
+      "tests": "319 passed, 16 skipped, 2 deselected in 6.88s"
+    },
+    {
+      "commit": "5373ebf",
+      "changed": 1,
+      "never": [],
+      "tests": "320 passed, 16 skipped, 2 deselected in 7.48s"
+    },
+    {
+      "commit": "b577975",
+      "changed": 1,
+      "never": [],
+      "tests": "321 passed, 16 skipped, 2 deselected in 6.88s"
+    },
+    {
+      "commit": "ab790a6",
+      "changed": 2,
+      "never": [],
+      "tests": "6 failed, 315 passed, 17 skipped, 2 deselected in 6.58s"
+    },
+    {
+      "commit": "ebd50a7",
+      "changed": 2,
+      "never": [],
+      "tests": "321 passed, 17 skipped, 2 deselected in 6.51s"
+    },
+    {
+      "commit": "f1a64ec",
+      "changed": 0
+    },
+    {
+      "commit": "47e97ae",
+      "changed": 0
+    },
+    {
+      "commit": "3fcf88e",
+      "changed": 1,
+      "never": [],
+      "tests": "321 passed, 17 skipped, 2 deselected in 6.53s"
+    },
+    {
+      "commit": "ffac028",
+      "changed": 2,
+      "never": [],
+      "tests": "321 passed, 17 skipped, 2 deselected in 6.75s"
+    },
+    {
+      "commit": "3aa568c",
+      "changed": 2,
+      "never": [],
+      "tests": "322 passed, 17 skipped, 2 deselected in 6.64s"
+    },
+    {
+      "commit": "8014ec6",
+      "changed": 0
+    },
+    {
+      "commit": "ce67960",
+      "changed": 2,
+      "never": [],
+      "tests": "324 passed, 17 skipped, 2 deselected in 6.41s"
+    },
+    {
+      "commit": "e9a56a6",
+      "changed": 1,
+      "never": [],
+      "tests": "324 passed, 17 skipped, 2 deselected in 7.29s"
+    },
+    {
+      "commit": "46c9fe3",
+      "changed": 4,
+      "never": [],
+      "tests": "1 failed, 324 passed, 17 skipped, 2 deselected in 6.38s"
+    },
+    {
+      "commit": "e6a24aa",
+      "changed": 2,
+      "never": [],
+      "tests": "325 passed, 17 skipped, 2 deselected in 6.80s"
+    },
+    {
+      "commit": "315f6c1",
+      "changed": 0
+    },
+    {
+      "commit": "382a933",
+      "changed": 1,
+      "never": [],
+      "tests": "325 passed, 17 skipped, 2 deselected in 6.67s"
+    },
+    {
+      "commit": "c327d6c",
+      "changed": 6,
+      "never": [
+        "tabulate._read_jsonl_file",
+        "tabulate._read_csv_file"
+      ],
+      "tests": "325 passed, 17 skipped, 2 deselected in 7.20s"
+    },
+    {
+      "commit": "b47acc1",
+      "changed": 6,
+      "never": [
+        "tabulate.cli._read_jsonl_file",
+        "tabulate.cli._read_csv_file"
+      ],
+      "tests": "325 passed, 17 skipped, 2 deselected in 7.52s"
+    },
+    {
+      "commit": "17bf1cf",
+      "changed": 0
+    },
+    {
+      "commit": "cf15727",
+      "changed": 3,
+      "never": [],
+      "tests": "347 passed, 17 skipped, 2 deselected in 9.47s"
+    },
+    {
+      "commit": "2f7f69d",
+      "changed": 1,
+      "never": [],
+      "tests": "325 passed, 17 skipped, 2 deselected in 7.36s"
+    },
+    {
+      "commit": "4c39df9",
+      "changed": 5,
+      "never": [],
+      "tests": "325 passed, 17 skipped, 2 deselected in 6.88s"
+    },
+    {
+      "commit": "5f87774",
+      "changed": 0
+    },
+    {
+      "commit": "3681fa5",
+      "changed": 1,
+      "never": [],
+      "tests": "325 passed, 17 skipped, 2 deselected in 6.74s"
+    }
+  ]
+}

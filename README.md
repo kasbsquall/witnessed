@@ -66,6 +66,18 @@ Rule 6 now requires a comparison (==, !=, <, <=, >, >=, in, not in), an isinstan
 
 A function added and never called is reported as never seen running. Checking real history exposed two defects in Witnessed itself: deletion-only hunks were silently ignored (the containing function was not reported as modified), and subprocesses started by test suites were not measured. Both were fixed with regression tests.
 
+### How often does it fire on a real project
+
+`bench/history.py` replays the history of python-tabulate with Witnessed's own library: for each of the 101 non-merge commits that touch `tabulate/` from 2022-05-20 to 268615a, it takes the functions that commit changed, runs that commit's own test suite under coverage (subprocesses included) and counts the changed functions whose body never executed. It measures only the "tested" level, because tabulate's history has no real-use baseline.
+
+Result (`bench/history.json`): 88 commits changed at least one function, none was skipped, and 2 of those 88 changed a function its own tests never ran, 4 of 301 changed functions in total. Both are consecutive commits of upstream PR #419 and flag the same two functions: c327d6c adds `_read_jsonl_file` and `_read_csv_file`, and b47acc1 moves them to `tabulate/cli.py`. The maintainer's next commit, 17bf1cf, adds the tests. So on a well-tested project Witnessed stayed silent on the other 86 commits and fired on a single pull request, where the gap was real and the maintainer closed it two commits later.
+
+Two upstream tests, `test_internal.py::test_wrap_text_wide_chars` and `test_textwrapper.py::test_wrap_mixed_string`, hang at some October 2024 commits and are deselected. Any commit whose suite still hits the 30 s per-test timeout is reported as skipped instead of counted. `bench/history.py` was written by Claude (Anthropic) as an analysis script, not by IBM Bob. To rerun it you need a full clone of python-tabulate and `pytest-timeout`:
+
+```
+python bench/history.py <path to python-tabulate clone>
+```
+
 ## How it differs from diff-cover
 
 diff-cover reports changed lines without coverage data for those lines. Witnessed works per function body, separates test runs from real-world use, and asks an agent for evidence that has to pass a six-rule gate. The result is a verdict for each function.
