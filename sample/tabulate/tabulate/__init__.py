@@ -1,7 +1,7 @@
 """Pretty-print tabular data."""
 
 from collections import namedtuple
-from collections.abc import Callable, Iterable, Sized
+from collections.abc import Iterable, Sized
 import dataclasses
 from dataclasses import dataclass
 from decimal import Decimal
@@ -12,7 +12,9 @@ import io
 from itertools import chain, zip_longest as izip_longest
 import math
 import re
+import sys
 import textwrap
+from typing import Callable, Union
 import warnings
 
 try:
@@ -1044,7 +1046,7 @@ def _padleft(width, s):
     True
 
     """
-    fmt = f"{{0:>{width}s}}"
+    fmt = "{0:>%ds}" % width
     return fmt.format(s)
 
 
@@ -1055,7 +1057,7 @@ def _padright(width, s):
     True
 
     """
-    fmt = f"{{0:<{width}s}}"
+    fmt = "{0:<%ds}" % width
     return fmt.format(s)
 
 
@@ -1066,7 +1068,7 @@ def _padboth(width, s):
     True
 
     """
-    fmt = f"{{0:^{width}s}}"
+    fmt = "{0:^%ds}" % width
     return fmt.format(s)
 
 
@@ -1477,8 +1479,8 @@ def _normalize_tabular_data(tabular_data, headers, showindex="default"):
             keys = tabular_data.keys()
             try:
                 rows = list(izip_longest(*tabular_data.values()))  # columns have to be transposed
-            except TypeError as e:  # not iterable
-                raise TypeError(err_msg) from e
+            except TypeError:  # not iterable
+                raise TypeError(err_msg)
 
         elif hasattr(tabular_data, "index"):
             # values is a property, has .index => it's likely a pandas.DataFrame (pandas 0.11.0)
@@ -1501,8 +1503,8 @@ def _normalize_tabular_data(tabular_data, headers, showindex="default"):
     else:  # it's a usual iterable of iterables, or a NumPy array, or an iterable of dataclasses
         try:
             rows = list(tabular_data)
-        except TypeError as e:  # not iterable
-            raise TypeError(err_msg) from e
+        except TypeError:  # not iterable
+            raise TypeError(err_msg)
 
         if headers == "keys" and not rows:
             # an empty table (issue #81)
@@ -2527,7 +2529,7 @@ def _build_row(
     padded_cells: list[list],
     colwidths: list[int],
     colaligns: list[str],
-    rowfmt: DataRow | Callable,
+    rowfmt: Union[DataRow, Callable],
 ) -> str:
     "Return a string which represents a row of data cells."
     if not rowfmt:
@@ -2803,7 +2805,7 @@ class _CustomTextWrap(textwrap.TextWrapper):
         """
         lines = []
         if self.width <= 0:
-            raise ValueError(f"invalid width {self.width!r} (must be > 0)")
+            raise ValueError("invalid width %r (must be > 0)" % self.width)
         if self.max_lines is not None:
             if self.max_lines > 1:
                 indent = self.subsequent_indent
@@ -2894,7 +2896,126 @@ class _CustomTextWrap(textwrap.TextWrapper):
         return lines
 
 
-if __name__ == "__main__":
-    from .cli import _main
+def _main():
+    """\
+    Usage: tabulate [options] [FILE ...]
 
+    Pretty-print tabular data.
+    See also https://github.com/astanin/python-tabulate
+
+    FILE                      a filename of the file with tabular data;
+                              if "-" or missing, read data from stdin.
+
+    Options:
+
+    -h, --help                show this message
+    -1, --header              use the first row of data as a table header
+    -o FILE, --output FILE    print table to FILE (default: stdout)
+    -s REGEXP, --sep REGEXP   use a custom column separator (default: whitespace)
+    -F FPFMT, --float FPFMT   floating point number format (default: g)
+    -I INTFMT, --int INTFMT   integer point number format (default: "")
+    -f FMT, --format FMT      set output table format; supported formats:
+                              plain, simple, grid, fancy_grid, pipe, orgtbl,
+                              rst, mediawiki, html, latex, latex_raw,
+                              latex_booktabs, latex_longtable, tsv
+                              (default: simple)
+    """
+    import getopt
+
+    usage = textwrap.dedent(_main.__doc__)
+    try:
+        opts, args = getopt.getopt(
+            sys.argv[1:],
+            "h1o:s:F:I:f:",
+            [
+                "help",
+                "header",
+                "output=",
+                "sep=",
+                "float=",
+                "int=",
+                "colalign=",
+                "format=",
+            ],
+        )
+    except getopt.GetoptError as e:
+        print(e)
+        print(usage)
+        sys.exit(2)
+    headers = []
+    floatfmt = _DEFAULT_FLOATFMT
+    intfmt = _DEFAULT_INTFMT
+    colalign = None
+    tablefmt = "simple"
+    sep = r"\s+"
+    outfile = "-"
+    for opt, value in opts:
+        if opt in ["-1", "--header"]:
+            headers = "firstrow"
+        elif opt in ["-o", "--output"]:
+            outfile = value
+        elif opt in ["-F", "--float"]:
+            floatfmt = value
+        elif opt in ["-I", "--int"]:
+            intfmt = value
+        elif opt in ["-C", "--colalign"]:
+            colalign = value.split()
+        elif opt in ["-f", "--format"]:
+            if value not in tabulate_formats:
+                print("%s is not a supported table format" % value)
+                print(usage)
+                sys.exit(3)
+            tablefmt = value
+        elif opt in ["-s", "--sep"]:
+            sep = value
+        elif opt in ["-h", "--help"]:
+            print(usage)
+            sys.exit(0)
+    files = [sys.stdin] if not args else args
+    with sys.stdout if outfile == "-" else open(outfile, "w") as out:
+        for f in files:
+            if f == "-":
+                f = sys.stdin
+            if _is_file(f):
+                _pprint_file(
+                    f,
+                    headers=headers,
+                    tablefmt=tablefmt,
+                    sep=sep,
+                    floatfmt=floatfmt,
+                    intfmt=intfmt,
+                    file=out,
+                    colalign=colalign,
+                )
+            else:
+                with open(f) as fobj:
+                    _pprint_file(
+                        fobj,
+                        headers=headers,
+                        tablefmt=tablefmt,
+                        sep=sep,
+                        floatfmt=floatfmt,
+                        intfmt=intfmt,
+                        file=out,
+                        colalign=colalign,
+                    )
+
+
+def _pprint_file(fobject, headers, tablefmt, sep, floatfmt, intfmt, file, colalign):
+    rows = fobject.readlines()
+    table = [re.split(sep, r.rstrip()) for r in rows if r.strip()]
+    print(
+        tabulate(
+            table,
+            headers,
+            tablefmt,
+            floatfmt=floatfmt,
+            intfmt=intfmt,
+            colalign=colalign,
+        ),
+        file=file,
+    )
+
+
+if __name__ == "__main__":
     _main()
