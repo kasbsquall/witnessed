@@ -4,6 +4,8 @@ Your agent says it tested the change. Witnessed shows which of the functions it 
 
 **Live report:** https://kasbsquall.github.io/witnessed/ (the real case below, no install needed).
 
+**Demo video:** https://youtu.be/bU2E0hyezjk (2:40, the scan, IBM Bob's witness hunt recorded live, and the gate).
+
 Built for the IBM Bob 2.0 Hackathon (lablab.ai, September 25 to 27, 2026). The specification is in [docs/SPEC.md](docs/SPEC.md).
 
 ## The real case
