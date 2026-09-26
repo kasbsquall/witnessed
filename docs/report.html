@@ -326,10 +326,11 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--lamp); outline-
 
 /* MOTION */
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  /* The entrance animates `translate`, hover and press use `transform`: they compose
+     instead of fighting, so hovering never restarts the entrance. */
+  @keyframes rise { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
   .block { animation: rise 250ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); }
   .cell { animation: rise 220ms var(--ease-out) both; animation-delay: calc(240ms + var(--stagger, 0) * 30ms); }
-  .cell:hover, .cell:active { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .cell, .meta-link, .textlink { transition: none; }
