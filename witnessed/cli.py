@@ -102,6 +102,8 @@ def _cmd_scan(args: argparse.Namespace) -> None:
                 "change": cu.change,
                 "level": level,
                 "seen_by": seen_by,
+                "body_start": info.get("body_start", 0),
+                "body_end": info.get("body_end", 0),
             }
         )
 

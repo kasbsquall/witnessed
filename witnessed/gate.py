@@ -206,6 +206,10 @@ def _is_substantive_assert(test: ast.expr, assigned_names: set[str], qualname: s
     # within a Compare or isinstance/len wrapper, not as the bare test.
     if isinstance(test, ast.Compare):
         left = test.left
+        # Reject tautologies such as ``result == result``.
+        sides = [ast.dump(n) for n in [left] + list(test.comparators)]
+        if len(set(sides)) < len(sides):
+            return False
         # Reject "result is None" and "result is not None".
         for op, comparator in zip(test.ops, test.comparators):
             if isinstance(op, (ast.Is, ast.IsNot)):
@@ -249,7 +253,25 @@ def _is_substantive_assert(test: ast.expr, assigned_names: set[str], qualname: s
 
 
 def _has_assertion_on_return(witness_source: str, qualname: str) -> bool:
-    """Return True if the witness has a substantive assert on the target's return value.
+    """Return True if the witness has a substantive assert on the target's return value."""
+    return bool(_substantive_assert_lines(witness_source, qualname))
+
+
+def _lines_executed(cov_file: Path, path: Path) -> set[int]:
+    """Return the lines of *path* executed according to *cov_file*."""
+    cov = CoverageData(basename=str(cov_file))
+    try:
+        cov.read()
+    except Exception:
+        return set()
+    for measured in cov.measured_files():
+        if Path(measured).resolve() == path.resolve():
+            return set(cov.lines(measured) or [])
+    return set()
+
+
+def _substantive_assert_lines(witness_source: str, qualname: str) -> set[int]:
+    """Return the line numbers of substantive asserts on the target's return value.
 
     Two patterns are accepted:
     1. Direct: ``assert target_call(...) == expected``
@@ -260,11 +282,11 @@ def _has_assertion_on_return(witness_source: str, qualname: str) -> bool:
     try:
         tree = ast.parse(witness_source)
     except SyntaxError:
-        return False
+        return set()
 
     target_calls = _find_target_calls(tree, qualname)
     if not target_calls:
-        return False
+        return set()
 
     # Collect Names that are directly assigned from a target call.
     # Pattern: x = target(...)  (simple assignment, one target)
@@ -275,13 +297,26 @@ def _has_assertion_on_return(witness_source: str, qualname: str) -> bool:
                 if isinstance(node.value, ast.Call) and _is_target_call(node.value, qualname):
                     assigned_from_call.add(node.targets[0].id)
 
-    # Check assert statements.
+    # A name rebound to anything else no longer holds the return value.
     for node in ast.walk(tree):
-        if isinstance(node, ast.Assert):
-            if _is_substantive_assert(node.test, assigned_from_call, qualname):
-                return True
+        targets: list[ast.expr] = []
+        if isinstance(node, ast.Assign):
+            if not (isinstance(node.value, ast.Call) and _is_target_call(node.value, qualname)):
+                targets = list(node.targets)
+        elif isinstance(node, (ast.AugAssign, ast.AnnAssign, ast.For, ast.NamedExpr)):
+            targets = [node.target]
+        for t in targets:
+            for n in ast.walk(t):
+                if isinstance(n, ast.Name):
+                    assigned_from_call.discard(n.id)
 
-    return False
+    # Check assert statements.
+    return {
+        node.lineno
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assert)
+        and _is_substantive_assert(node.test, assigned_from_call, qualname)
+    }
 
 
 def _body_lines_executed(
@@ -398,8 +433,9 @@ def run_gate(
     if not _has_call_site(witness_source, qualname):
         failures["no_call_site"] = True
 
-    # --- Rule 7: no_assertion (AST, before run) ---
-    if not _has_assertion_on_return(witness_source, qualname):
+    # --- Rule 6: no_assertion (AST, before run) ---
+    assert_lines = _substantive_assert_lines(witness_source, qualname)
+    if not assert_lines:
         failures["no_assertion"] = True
 
     # --- Rules 1 & 2: run under coverage ---
@@ -414,7 +450,7 @@ def run_gate(
             sys.executable,
             "-m", "coverage", "run",
             f"--data-file={cov_file}",
-            f"--source={pkg_name}",
+            f"--source={pkg_name},{witness_path.parent}",
             str(witness_path),
         ]
 
@@ -434,13 +470,18 @@ def run_gate(
         elif exit_code != 0:
             failures["nonzero_exit"] = True
         else:
-            # Rule 3: check body coverage.
+            # Rule 2: check body coverage. Fail closed: a target whose file or body
+            # range cannot be found is never promoted.
             if target_file and target_file.exists() and body_start and body_end:
                 body_lines = _body_lines_executed(
                     cov_file, target_file, body_start, body_end
                 )
-                if not body_lines:
-                    failures["body_not_executed"] = True
+            if not body_lines:
+                failures["body_not_executed"] = True
+            # Rule 6 at run time: at least one substantive assert must have executed
+            # (an assert inside dead code proves nothing).
+            elif assert_lines and not _lines_executed(cov_file, witness_path) & assert_lines:
+                failures["no_assertion"] = True
 
     # --- Rule 3: target_modified (SHA-256 and mtime after run) ---
     # Catches both permanent modifications (SHA-256 differs) and write-then-restore

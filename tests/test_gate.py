@@ -513,3 +513,76 @@ def test_scan_json_updated_on_accept(tmp_path: Path) -> None:
     assert levels.get("mypkg.add") == "agent_witnessed"
     assert data["counts"]["agent_witnessed"] == 1
     assert data["counts"]["unwitnessed"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Jury round 2 regressions (added by Claude): shadowing, dead-code asserts,
+# tautologies, rebound results, and a scan.json without a body range.
+# ---------------------------------------------------------------------------
+
+
+def _run_with_path(tmp_path: Path, body: str) -> dict:
+    header = f"import sys\nsys.path.insert(0, {str(tmp_path)!r})\n"
+    return _run(tmp_path, header + textwrap.dedent(body))
+
+
+def test_reject_shadowed_name(tmp_path: Path) -> None:
+    """Rebinding the target name to a stand-in never runs the real body."""
+    verdict = _run_with_path(tmp_path, """\
+        from mypkg import add
+        add = lambda a, b: 5
+        result = add(2, 3)
+        assert result == 5
+    """)
+    assert verdict["reason"] == "body_not_executed"
+
+
+def test_reject_assert_in_dead_code(tmp_path: Path) -> None:
+    """An assert that never executes proves nothing."""
+    verdict = _run_with_path(tmp_path, """\
+        import mypkg
+        result = mypkg.add(2, 3)
+        if False:
+            assert result == 5
+    """)
+    assert verdict["reason"] == "no_assertion"
+
+
+def test_reject_tautology(tmp_path: Path) -> None:
+    verdict = _run_with_path(tmp_path, """\
+        import mypkg
+        result = mypkg.add(2, 3)
+        assert result == result
+    """)
+    assert verdict["reason"] == "no_assertion"
+
+
+def test_reject_rebound_result(tmp_path: Path) -> None:
+    verdict = _run_with_path(tmp_path, """\
+        import mypkg
+        result = mypkg.add(2, 3)
+        result = 99
+        assert result == 99
+    """)
+    assert verdict["reason"] == "no_assertion"
+
+
+def test_reject_when_body_range_unknown(tmp_path: Path) -> None:
+    """Fail closed: without a body range the gate cannot check rule 2."""
+    import json
+
+    pkg, qualname = _make_pkg(tmp_path)
+    scan_path = _make_scan_json(tmp_path, qualname, pkg)
+    data = json.loads(scan_path.read_text(encoding="utf-8"))
+    for rec in data["changed"]:
+        del rec["body_start"], rec["body_end"]
+    scan_path.write_text(json.dumps(data), encoding="utf-8")
+    witness = tmp_path / "witness.py"
+    witness.write_text(
+        f"import sys\nsys.path.insert(0, {str(tmp_path)!r})\n"
+        "import mypkg\nresult = mypkg.add(2, 3)\nassert result == 5\n",
+        encoding="utf-8",
+    )
+    verdict = run_gate(witness_path=witness, qualname=qualname,
+                       repo_root=tmp_path, scan_json_path=scan_path)
+    assert verdict["reason"] == "body_not_executed"
