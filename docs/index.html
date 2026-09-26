@@ -3,21 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Witnessed Report</title>
+<title>Witnessed report</title>
+<meta name="description" content="Which functions a change touched that nobody has ever seen running, and the witnesses IBM Bob wrote for them.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='4' fill='%230F1215'/%3E%3Crect x='3' y='3' width='22' height='22' rx='3' fill='none' stroke='%23F2B544' stroke-width='2'/%3E%3Ccircle cx='14' cy='14' r='4' fill='%23F2B544'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
   --ink: #0F1215;
-  --cell: #1D2228;
+  --surface: #171B20;
+  --raise: #1D2228;
   --line: rgba(233,229,220,0.08);
+  --line-strong: rgba(233,229,220,0.16);
   --text: #E9E5DC;
   --muted: #8B9097;
-  --dim: #3A4149;
+  --dim: #4A525B;
   --lamp: #F2B544;
   --alert: #E0765A;
   --tested: #8A7A55;
   --used: #CFC9BC;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+  --s6: 40px; --s7: 64px; --s8: 96px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { background: var(--ink); color: var(--text); }
@@ -27,475 +35,340 @@ body {
   line-height: 1.6;
   background: var(--ink);
   color: var(--text);
-  padding: 32px 16px 64px;
+  padding: var(--s6) var(--s4) var(--s7);
   min-height: 100vh;
+  overflow-x: hidden;
 }
-.wrap { max-width: 960px; margin: 0 auto; }
-
-/* --- numbers --- */
+@media (min-width: 720px) {
+  body { padding: var(--s7) var(--s6) var(--s8); }
+}
+.wrap { max-width: 1000px; margin: 0 auto; }
 .nums { font-variant-numeric: tabular-nums lining-nums slashed-zero; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--lamp); outline-offset: 3px; border-radius: 2px; }
+.icon { width: 1em; height: 1em; flex-shrink: 0; display: inline-block; vertical-align: -0.125em; }
+.eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+.section { margin-top: var(--s8); }
+.section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s5);
+  margin-bottom: var(--s5);
+}
+.section__title {
+  font-family: "Bricolage Grotesque", Georgia, serif;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
 
-/* ================================================================
-   HEADER
-   ================================================================ */
+/* HEADER */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--s3) var(--s5);
 }
-.header__brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.header__mark { display: block; width: 36px; height: 36px; flex-shrink: 0; }
-.header__title {
-  font-family: "Bricolage Grotesque", Georgia, serif;
-  font-weight: 600;
-  font-size: 26px;
-  letter-spacing: -0.02em;
-  color: var(--text);
-  line-height: 1;
-}
-.header__meta {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--muted);
-}
-.header__tagline {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 48px;
-  line-height: 1.5;
-}
-
-/* ================================================================
-   HERO
-   ================================================================ */
-.hero { margin-bottom: 64px; display: flex; gap: 48px; flex-wrap: wrap; align-items: flex-end; }
-.hero__block { min-width: 0; }
-.hero__label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--muted);
-  margin-bottom: 4px;
-}
-.hero__count {
+.brand { display: flex; align-items: center; gap: var(--s3); }
+.brand__mark { width: 28px; height: 28px; display: block; }
+.brand__name {
   font-family: "Bricolage Grotesque", Georgia, serif;
   font-weight: 700;
-  font-size: 88px;
-  line-height: 0.9;
-  letter-spacing: -0.035em;
-  font-variant-numeric: tabular-nums lining-nums slashed-zero;
-  margin-bottom: 8px;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
-.hero__count .n-alert { color: var(--alert); }
-.hero__count .n-lamp  { color: var(--lamp); }
-.hero__count .n-text  { color: var(--text); }
-.hero__sublabel {
-  font-size: 13px;
+.meta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  text-decoration: none;
   color: var(--muted);
-  font-variant-numeric: tabular-nums lining-nums slashed-zero;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 150ms var(--ease-out);
 }
+.meta-link:hover { color: var(--text); }
+.tagline {
+  margin-top: var(--s4);
+  max-width: 64ch;
+  font-size: 14px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.tagline strong { color: var(--text); font-weight: 500; }
 
-/* ================================================================
-   LEGEND
-   ================================================================ */
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 24px;
-  margin-bottom: 32px;
+/* HERO */
+.hero {
+  margin-top: var(--s7);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s6);
 }
-.legend__item {
+@media (min-width: 720px) {
+  .hero { grid-template-columns: repeat(2, max-content); gap: var(--s8); }
+}
+.hero__count {
+  margin-top: var(--s2);
+  font-family: "Bricolage Grotesque", Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(64px, 11vw, 96px);
+  line-height: 0.86;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+.hero__count .of { color: var(--dim); }
+.is-alert { color: var(--alert); }
+.is-zero { color: var(--text); }
+.hero__sub { margin-top: var(--s3); font-size: 13px; color: var(--muted); }
+.hero__bob {
+  margin-top: var(--s2);
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--muted);
+  gap: var(--s2);
+  font-size: 13px;
+  color: var(--lamp);
 }
-.legend__swatch {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-.legend__swatch--used    { background: var(--used);   border: 1.5px solid var(--used); }
-.legend__swatch--tested  { background: var(--tested); border: 1.5px solid var(--tested); }
-.legend__swatch--agent   { background: var(--cell);   border: 1.5px solid var(--lamp); }
-.legend__swatch--unwit   { background: var(--cell);   border: 1.5px dashed var(--alert); }
 
-/* ================================================================
-   CELLS GRID
-   ================================================================ */
+/* LEGEND */
+.legend { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); }
+.legend__item { display: flex; align-items: center; gap: var(--s2); font-size: 12px; color: var(--muted); }
+.legend__item b { color: var(--text); font-weight: 500; }
+.legend__item.is-empty b { color: var(--dim); }
+.swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+.swatch--used { background: var(--used); }
+.swatch--tested { background: var(--tested); }
+.swatch--agent_witnessed { background: var(--raise); box-shadow: inset 0 0 0 1.5px var(--lamp); }
+.swatch--unwitnessed { background: var(--raise); outline: 1.5px dashed var(--alert); outline-offset: -1.5px; }
+
+/* CELLS */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s2);
 }
+@media (min-width: 720px) { .grid { grid-template-columns: repeat(auto-fill, minmax(208px, 1fr)); } }
 .cell {
-  height: 64px;
-  padding: 12px;
+  position: relative;
+  min-height: 72px;
+  padding: var(--s3) var(--s4);
   border-radius: 3px;
+  border: 1.5px solid transparent;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 3px;
+  gap: var(--s1);
   text-align: left;
-  background: none;
-  transition: border-color 120ms ease, transform 80ms ease;
+  font: inherit;
+  transition: transform 120ms var(--ease-out), box-shadow 150ms var(--ease-out), background-color 150ms var(--ease-out);
 }
-.cell__name {
-  font-family: "IBM Plex Mono", Consolas, monospace;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-.cell__level {
-  font-family: "IBM Plex Mono", Consolas, monospace;
-  font-size: 11px;
-  display: block;
-}
-/* filled cells */
-.cell--used, .cell--tested {
-  color: var(--ink);
-}
-.cell--used   { background: var(--used);   border: 1.5px solid var(--used); }
-.cell--tested { background: var(--tested); border: 1.5px solid var(--tested); }
-/* outlined cells */
-.cell--agent_witnessed, .cell--unwitnessed {
-  color: var(--text);
-}
-.cell--agent_witnessed { background: var(--cell); border: 1.5px solid var(--lamp); }
-.cell--unwitnessed     { background: var(--cell); border: 1.5px dashed var(--alert); }
+.cell__name { font-size: 13px; font-weight: 500; overflow-wrap: break-word; line-height: 1.35; }
+.cell__level { font-size: 11px; opacity: 0.8; }
+.cell--used { background: var(--used); color: var(--ink); }
+.cell--tested { background: var(--tested); color: var(--ink); }
+.cell--agent_witnessed { background: var(--raise); border-color: var(--lamp); color: var(--text); }
+.cell--agent_witnessed .cell__level { color: var(--lamp); opacity: 1; }
+.cell--unwitnessed { background: var(--raise); border: 1.5px dashed var(--alert); color: var(--text); }
+.cell--unwitnessed .cell__level { color: var(--alert); opacity: 1; }
+.cell:hover { transform: translateY(-1px); }
+.cell:active { transform: scale(0.97); }
+.cell[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink), 0 0 0 4.5px var(--text); }
+.cell:focus-visible { outline: 2px solid var(--lamp); outline-offset: 5px; }
 
-/* hover */
-.cell--used:hover            { border-color: #ddd4c3; }
-.cell--tested:hover          { border-color: #a08e6e; }
-.cell--agent_witnessed:hover { border-color: #f5c76a; }
-.cell--unwitnessed:hover     { border-color: #e88e76; }
-
-/* active */
-.cell:active { transform: scale(0.98); }
-
-/* focus */
-.cell:focus-visible {
-  outline: 2px solid var(--lamp);
-  outline-offset: 2px;
-}
-
-/* selected */
-.cell[aria-pressed="true"].cell--used            { background: #ddd4c3; border-color: #ddd4c3; }
-.cell[aria-pressed="true"].cell--tested          { background: #a08e6e; border-color: #a08e6e; }
-.cell[aria-pressed="true"].cell--agent_witnessed { border-color: #f5c76a; border-width: 2px; }
-.cell[aria-pressed="true"].cell--unwitnessed     { border-color: #e88e76; border-width: 2px; }
-
-/* ================================================================
-   DETAIL PANEL
-   ================================================================ */
+/* DETAIL */
 .detail {
-  background: var(--cell);
-  border-radius: 3px;
+  margin-top: var(--s4);
+  background: var(--surface);
   border: 1px solid var(--line);
-  padding: 20px;
-  margin-bottom: 64px;
+  border-radius: 3px;
+  padding: var(--s5);
 }
-.detail dl {
+@media (min-width: 720px) { .detail { padding: var(--s6); } }
+.detail__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2) var(--s4); }
+.detail__name { font-size: 16px; font-weight: 500; overflow-wrap: break-word; }
+.pill {
+  display: inline-flex; align-items: center; gap: var(--s1);
+  font-size: 11px; padding: 2px var(--s2); border-radius: 2px;
+  border: 1px solid var(--line-strong); color: var(--muted);
+}
+.pill--agent_witnessed { color: var(--lamp); border-color: rgba(242,181,68,0.4); }
+.pill--unwitnessed { color: var(--alert); border-color: rgba(224,118,90,0.4); }
+.facts {
+  margin-top: var(--s5);
   display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 24px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s1) var(--s5);
 }
-.detail dt {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-  padding-top: 1px;
-}
-.detail dd {
-  font-size: 13px;
-  color: var(--text);
-  overflow-wrap: anywhere;
-}
-.witness-src {
-  font-family: "IBM Plex Mono", Consolas, monospace;
+@media (min-width: 720px) { .facts { grid-template-columns: max-content minmax(0, 1fr); row-gap: var(--s2); } }
+.facts dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding-top: 2px; }
+.facts dd { font-size: 13px; overflow-wrap: break-word; margin-bottom: var(--s2); }
+@media (min-width: 720px) { .facts dd { margin-bottom: 0; } }
+.witness { margin-top: var(--s5); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
+@media (min-width: 720px) { .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--s5); } }
+.code {
   font-size: 12px;
-  color: var(--text);
+  line-height: 1.7;
   background: var(--ink);
   border: 1px solid var(--line);
   border-radius: 3px;
-  padding: 12px;
-  margin-top: 8px;
+  padding: var(--s4);
+  white-space: pre;
   overflow-x: auto;
-  white-space: pre;
-  max-height: 320px;
-  overflow-y: auto;
 }
+.rules-label { display: block; margin-bottom: var(--s3); }
+.rules { list-style: none; display: grid; gap: var(--s2); font-size: 12.5px; }
+.rules li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: var(--s2); align-items: start; }
+.rules .icon { width: 16px; height: 16px; margin-top: 2px; }
+.rules .ok { color: var(--lamp); }
+.rules .fail { color: var(--alert); }
+.rules .skip { color: var(--dim); }
+.rules small { display: block; color: var(--muted); font-size: 11.5px; }
 
-/* ================================================================
-   CONTEXT
-   ================================================================ */
-.context {
+/* BOB STRIP */
+.steps {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 16px;
-  margin-bottom: 48px;
+  grid-template-columns: minmax(0, 1fr);
+  border-top: 1px solid var(--line-strong);
 }
-@media (max-width: 719px) {
-  .context { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.step { padding: var(--s5) 0; border-bottom: 1px solid var(--line); }
+@media (min-width: 720px) {
+  .step { padding: var(--s5) var(--s5) var(--s5) 0; border-bottom: 0; }
+  .step + .step { padding-left: var(--s5); border-left: 1px solid var(--line); }
 }
-.context__card {
-  background: var(--cell);
-  border-radius: 3px;
-  border: 1px solid var(--line);
-  padding: 20px;
-  min-width: 0;
+.step__top { display: flex; align-items: center; gap: var(--s3); color: var(--lamp); }
+.step__top .icon { width: 22px; height: 22px; }
+.step__n { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+.step__title { margin-top: var(--s3); font-size: 14px; font-weight: 500; }
+.step__text { margin-top: var(--s1); font-size: 12.5px; color: var(--muted); text-wrap: pretty; }
+.cost {
+  margin-top: var(--s5);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s5);
+  font-size: 13px; color: var(--muted);
 }
-.context__label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  margin-bottom: 12px;
-  display: block;
+.cost__main { display: flex; align-items: center; gap: var(--s2); color: var(--text); }
+.cost__main .icon { width: 18px; height: 18px; color: var(--lamp); }
+.textlink {
+  display: inline-flex; align-items: center; gap: var(--s1);
+  color: var(--muted); text-decoration: underline; text-underline-offset: 3px;
+  text-decoration-color: var(--dim); transition: color 150ms var(--ease-out);
 }
-.commit-msg {
-  font-family: "IBM Plex Mono", Consolas, monospace;
-  font-size: 12.5px;
-  color: var(--text);
-  white-space: pre;
-  max-height: 360px;
-  overflow: auto;
-  margin: 0;
-}
-.counts-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: "IBM Plex Mono", Consolas, monospace;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums lining-nums slashed-zero;
-}
-.counts-table th {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-  text-align: right;
-  padding: 0 0 6px 12px;
-  font-weight: 400;
-}
-.counts-table th:first-child { text-align: left; padding-left: 0; }
-.counts-table td { padding: 3px 0; }
-.counts-table td:first-child { color: var(--muted); padding-right: 12px; }
-.counts-table td:nth-child(2) { text-align: right; padding-right: 12px; color: var(--alert); }
-.counts-table td:nth-child(3) { text-align: right; color: var(--lamp); }
-.counts-table tr.total td { border-top: 1px solid var(--line); padding-top: 8px; }
-.counts-table tr.total td:nth-child(2),
-.counts-table tr.total td:nth-child(3) { color: var(--text); }
+.textlink:hover { color: var(--text); }
 
-/* ================================================================
-   FOOTER
-   ================================================================ */
+/* CONTEXT */
+.context { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
+@media (min-width: 880px) { .context { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: var(--s5); min-width: 0; }
+.card .eyebrow { display: block; margin-bottom: var(--s4); }
+.commit { font-size: 12.5px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; }
+.more { margin-top: var(--s3); }
+.more summary {
+  display: inline-flex; align-items: center; gap: var(--s1); cursor: pointer; list-style: none;
+  font-size: 12px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px;
+  text-decoration-color: var(--dim);
+}
+.more summary::-webkit-details-marker { display: none; }
+.more summary:hover { color: var(--text); }
+.more summary:focus-visible { outline: 2px solid var(--lamp); outline-offset: 3px; }
+.more[open] summary { margin-bottom: var(--s3); }
+.counts { width: 100%; border-collapse: collapse; font-size: 13px; }
+.counts th {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+  font-weight: 400; text-align: right; padding: 0 0 var(--s3) var(--s3); white-space: nowrap;
+}
+.counts th:first-child { text-align: left; padding-left: 0; }
+.counts td { padding: var(--s2) 0; border-top: 1px solid var(--line); }
+.counts td + td { text-align: right; padding-left: var(--s3); width: 1%; white-space: nowrap; }
+.counts .row-label { display: flex; align-items: center; gap: var(--s2); color: var(--muted); }
+.counts .n0 { color: var(--dim); }
+.counts .n-used { color: var(--used); }
+.counts .n-tested { color: var(--tested); }
+.counts .n-agent_witnessed { color: var(--lamp); }
+.counts .n-unwitnessed { color: var(--alert); }
+.counts tr.total td { border-top: 1px solid var(--line-strong); color: var(--text); }
+
+/* HISTORY */
+.history { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5) var(--s7); align-items: start; }
+@media (min-width: 720px) { .history { grid-template-columns: max-content minmax(0, 1fr); } }
+.history__count {
+  font-family: "Bricolage Grotesque", Georgia, serif; font-weight: 700;
+  font-size: clamp(56px, 8vw, 72px); line-height: 0.9; letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums lining-nums; white-space: nowrap;
+}
+.history__count .of { color: var(--dim); }
+.history__sub { margin-top: var(--s3); font-size: 13px; color: var(--muted); }
+.history__facts { display: grid; gap: var(--s2); font-size: 13px; color: var(--muted); }
+.history__facts b { color: var(--text); font-weight: 500; }
+.history__facts .row { display: flex; align-items: flex-start; gap: var(--s2); }
+.history__facts .icon { width: 16px; height: 16px; margin-top: 3px; color: var(--muted); }
+
+/* FOOTER */
 .footer {
-  text-align: center;
-  font-size: 12px;
-  color: var(--muted);
+  margin-top: var(--s8);
+  padding-top: var(--s4);
   border-top: 1px solid var(--line);
-  padding-top: 12px;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s2) var(--s5);
+  font-size: 12px; color: var(--muted);
 }
 
-/* ================================================================
-   MOTION
-   ================================================================ */
+/* MOTION */
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: none; }
-  }
-  .block {
-    animation: rise 220ms ease both;
-    animation-delay: calc(var(--delay, 0) * 1ms);
-  }
-  .cell {
-    animation: rise 200ms ease both;
-    animation-delay: calc(var(--stagger, 0) * 30ms + 120ms);
-  }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .block { animation: rise 250ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); }
+  .cell { animation: rise 220ms var(--ease-out) both; animation-delay: calc(240ms + var(--stagger, 0) * 30ms); }
+  .cell:hover, .cell:active { animation: none; }
 }
-
-@media (max-width: 375px) {
-  body { padding-left: 16px; padding-right: 16px; overflow-x: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .cell, .meta-link, .textlink { transition: none; }
+  .cell:hover { transform: none; }
 }
 </style>
 </head>
 <body>
-<div class="wrap">
+<main class="wrap">
 
-  <!-- HEADER -->
-  <header class="header block" style="--delay:0">
-    <div class="header__brand">
-      <svg class="header__mark" viewBox="0 0 84 84" fill="none" aria-hidden="true">
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(0   42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(60  42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(90  42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(120 42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(150 42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(180 42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(210 42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(240 42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(270 42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(300 42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--dim)"   stroke-width="5.5" stroke-linecap="round" transform="rotate(330 42 42)"/>
-        <line x1="42" y1="4" x2="42" y2="15" stroke="var(--lamp)"  stroke-width="7"   stroke-linecap="round" transform="rotate(30  42 42)"/>
-      </svg>
-      <span class="header__title">witnessed</span>
-    </div>
-    <span class="header__meta"><a href="https://github.com/astanin/python-tabulate/commit/c327d6c" style="color:inherit;text-decoration:none">python-tabulate, upstream c327d6c</a></span>
+  <header class="header block" style="--i:0">
+    <div class="brand"><svg class="brand__mark" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="1.75" y="1.75" width="24.5" height="24.5" rx="3" stroke="var(--lamp)" stroke-width="1.5"/><rect x="6.5" y="6.5" width="15" height="15" rx="1.5" stroke="var(--dim)" stroke-width="1.5" stroke-dasharray="2.5 2.5"/><circle cx="14" cy="14" r="3" fill="var(--lamp)"/></svg><span class="brand__name">witnessed</span></div>
+    <a class="meta-link" href="https://github.com/astanin/python-tabulate/commit/c327d6c">python-tabulate, upstream c327d6c <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M198,64V168a6,6,0,0,1-12,0V78.48L68.24,196.24a6,6,0,0,1-8.48-8.48L177.52,70H88a6,6,0,0,1,0-12H192A6,6,0,0,1,198,64Z"/></svg></a>
   </header>
-  <p class="header__tagline block" style="--delay:20">Witnessed finds the functions a change touched that nobody has ever seen running, and sends IBM Bob to write a witness for each one: a small script that calls the function and must pass a six-rule gate.</p>
+  <p class="tagline block" style="--i:1">Witnessed finds the functions a change touched that <strong>nobody has ever seen running</strong>, and sends IBM Bob to write a witness for each one: a small script that calls the real function and must pass a six-rule gate.</p>
 
-  <!-- HERO -->
-  <section class="hero block" style="--delay:60" aria-label="Coverage summary">
-    <div class="hero__block">
-      <p class="hero__label">Before Bob</p>
-      <p class="hero__count nums" aria-label="Before Bob: 2 of 6 changed functions had never run">
-        <span class="n-alert">2</span><span class="n-text"> of 6</span>
-      </p>
-      <p class="hero__sublabel">changed functions had never run</p>
+  <section class="hero block" style="--i:2" aria-label="Before and after Bob">
+    <div>
+      <p class="eyebrow">Before Bob</p>
+      <p class="hero__count nums"><span class="is-alert">2</span><span class="of"> of 6</span></p>
+      <p class="hero__sub">changed functions never seen running</p>
     </div>
-    <div class="hero__block">
-      <p class="hero__label">After Bob</p>
-      <p class="hero__count nums" aria-label="After Bob: 0 of 6 still unwitnessed">
-        <span class="n-lamp">0</span><span class="n-text"> of 6</span>
-      </p>
-      <p class="hero__sublabel">still unwitnessed</p>
+    <div>
+      <p class="eyebrow">After Bob</p>
+      <p class="hero__count nums"><span class="is-zero">0</span><span class="of"> of 6</span></p>
+      <p class="hero__sub">changed functions never seen running</p>
+      <p class="hero__bob nums"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224.42,104.2c-3.9-4.07-7.93-8.27-9.55-12.18-1.5-3.63-1.58-9-1.67-14.68-.14-9.38-.3-20-7.42-27.12S188,42.94,178.66,42.8c-5.68-.09-11-.17-14.68-1.67-3.91-1.62-8.11-5.65-12.18-9.55C145.16,25.22,137.64,18,128,18s-17.16,7.22-23.8,13.58c-4.07,3.9-8.27,7.93-12.18,9.55-3.63,1.5-9,1.58-14.68,1.67-9.38.14-20,.3-27.12,7.42S42.94,68,42.8,77.34c-.09,5.68-.17,11-1.67,14.68-1.62,3.91-5.65,8.11-9.55,12.18C25.22,110.84,18,118.36,18,128s7.22,17.16,13.58,23.8c3.9,4.07,7.93,8.27,9.55,12.18,1.5,3.63,1.58,9,1.67,14.68.14,9.38.3,20,7.42,27.12S68,213.06,77.34,213.2c5.68.09,11,.17,14.68,1.67,3.91,1.62,8.11,5.65,12.18,9.55C110.84,230.78,118.36,238,128,238s17.16-7.22,23.8-13.58c4.07-3.9,8.27-7.93,12.18-9.55,3.63-1.5,9-1.58,14.68-1.67,9.38-.14,20-.3,27.12-7.42s7.28-17.74,7.42-27.12c.09-5.68.17-11,1.67-14.68,1.62-3.91,5.65-8.11,9.55-12.18C230.78,145.16,238,137.64,238,128S230.78,110.84,224.42,104.2Zm-8.66,39.3c-4.67,4.86-9.5,9.9-12,15.9-2.38,5.74-2.48,12.52-2.58,19.08-.11,7.44-.23,15.14-3.9,18.82s-11.38,3.79-18.82,3.9c-6.56.1-13.34.2-19.08,2.58-6,2.48-11,7.31-15.91,12-5.25,5-10.68,10.24-15.49,10.24s-10.24-5.21-15.5-10.24c-4.86-4.67-9.9-9.5-15.9-12-5.74-2.38-12.52-2.48-19.08-2.58-7.44-.11-15.14-.23-18.82-3.9s-3.79-11.38-3.9-18.82c-.1-6.56-.2-13.34-2.58-19.08-2.48-6-7.31-11-12-15.91C35.21,138.24,30,132.81,30,128s5.21-10.24,10.24-15.5c4.67-4.86,9.5-9.9,12-15.9,2.38-5.74,2.48-12.52,2.58-19.08.11-7.44.23-15.14,3.9-18.82s11.38-3.79,18.82-3.9c6.56-.1,13.34-.2,19.08-2.58,6-2.48,11-7.31,15.91-12C117.76,35.21,123.19,30,128,30s10.24,5.21,15.5,10.24c4.86,4.67,9.9,9.5,15.9,12,5.74,2.38,12.52,2.48,19.08,2.58,7.44.11,15.14.23,18.82,3.9s3.79,11.38,3.9,18.82c.1,6.56.2,13.34,2.58,19.08,2.48,6,7.31,11,12,15.91,5,5.25,10.24,10.68,10.24,15.49S220.79,138.24,215.76,143.5ZM172.24,99.76a6,6,0,0,1,0,8.48l-56,56a6,6,0,0,1-8.48,0l-24-24a6,6,0,0,1,8.48-8.48L112,151.51l51.76-51.75A6,6,0,0,1,172.24,99.76Z"/></svg>2 witnessed by Bob, gate accepted</p>
     </div>
-    <!-- search text for tests -->
     <span hidden>2 of 6 changed functions were never seen running</span>
     <span hidden>after gate: 0 of 6 still unwitnessed</span>
   </section>
 
-  <!-- LEGEND -->
-  <div class="legend block" style="--delay:120">
-    <div class="legend__item">
-      <span class="legend__swatch legend__swatch--used" aria-hidden="true"></span>
-      <span>used in real runs</span>
+  <section class="section block" style="--i:3" aria-labelledby="fn-title">
+    <div class="section__head">
+      <h2 class="section__title nums" id="fn-title">The 6 functions this change touched</h2>
+      <div class="legend"><span class="legend__item nums is-empty"><span class="swatch swatch--used"></span>used in real runs <b>0</b></span><span class="legend__item nums"><span class="swatch swatch--tested"></span>only by tests <b>4</b></span><span class="legend__item nums"><span class="swatch swatch--agent_witnessed"></span>never ran, now witnessed by Bob <b>2</b></span><span class="legend__item nums is-empty"><span class="swatch swatch--unwitnessed"></span>never seen running <b>0</b></span></div>
     </div>
-    <div class="legend__item">
-      <span class="legend__swatch legend__swatch--tested" aria-hidden="true"></span>
-      <span>only by tests</span>
-    </div>
-    <div class="legend__item">
-      <span class="legend__swatch legend__swatch--agent" aria-hidden="true"></span>
-      <span>never ran, now witnessed by Bob</span>
-    </div>
-    <div class="legend__item">
-      <span class="legend__swatch legend__swatch--unwit" aria-hidden="true"></span>
-      <span>never seen running</span>
-    </div>
-  </div>
-
-  <!-- CELLS GRID -->
-  <div class="grid block" style="--delay:180" id="fn-grid" role="group" aria-label="Changed functions">
-
-      <button class="cell cell--tested" id="btn-0"
-              aria-pressed="false"
-              data-qualname="tabulate._main"
-              data-change="modified"
-              data-level="only by tests"
-              data-seen="tested"
-              data-witness=""
-              data-gate=""
-              style="--stagger:0">
-        <span class="cell__name">_main</span>
-        <span class="cell__level">only by tests</span>
-      </button>
-      <button class="cell cell--tested" id="btn-1"
-              aria-pressed="false"
-              data-qualname="tabulate._read_rsv_file"
-              data-change="added"
-              data-level="only by tests"
-              data-seen="tested"
-              data-witness=""
-              data-gate=""
-              style="--stagger:1">
-        <span class="cell__name">_read_rsv_file</span>
-        <span class="cell__level">only by tests</span>
-      </button>
-      <button class="cell cell--agent_witnessed" id="btn-2"
-              aria-pressed="true"
-              data-qualname="tabulate._read_jsonl_file"
-              data-change="added"
-              data-level="never ran, now witnessed by Bob"
-              data-seen="an IBM Bob witness (gate accepted)"
-              data-witness="witnesses/tabulate._read_jsonl_file.py"
-              data-gate="accepted"
-              style="--stagger:2">
-        <span class="cell__name">_read_jsonl_file</span>
-        <span class="cell__level">never ran, now witnessed by Bob</span>
-      </button>
-      <button class="cell cell--agent_witnessed" id="btn-3"
-              aria-pressed="false"
-              data-qualname="tabulate._read_csv_file"
-              data-change="added"
-              data-level="never ran, now witnessed by Bob"
-              data-seen="an IBM Bob witness (gate accepted)"
-              data-witness="witnesses/tabulate._read_csv_file.py"
-              data-gate="accepted"
-              style="--stagger:3">
-        <span class="cell__name">_read_csv_file</span>
-        <span class="cell__level">never ran, now witnessed by Bob</span>
-      </button>
-      <button class="cell cell--tested" id="btn-4"
-              aria-pressed="false"
-              data-qualname="tabulate._open_and_pprint_file"
-              data-change="added"
-              data-level="only by tests"
-              data-seen="tested"
-              data-witness=""
-              data-gate=""
-              style="--stagger:4">
-        <span class="cell__name">_open_and_pprint_file</span>
-        <span class="cell__level">only by tests</span>
-      </button>
-      <button class="cell cell--tested" id="btn-5"
-              aria-pressed="false"
-              data-qualname="tabulate._pprint_file"
-              data-change="modified"
-              data-level="only by tests"
-              data-seen="tested"
-              data-witness=""
-              data-gate=""
-              style="--stagger:5">
-        <span class="cell__name">_pprint_file</span>
-        <span class="cell__level">only by tests</span>
-      </button>
-  </div>
-
-  <!-- DETAIL PANEL -->
-  <div class="detail block" style="--delay:240" id="fn-detail" aria-live="polite" role="region" aria-label="Function detail">
-    <dl>
-      <dt>qualname</dt><dd id="d-qualname" class="nums">--</dd>
-      <dt>change type</dt><dd id="d-change">--</dd>
-      <dt>level</dt><dd id="d-level">--</dd>
-      <dt>seen by</dt><dd id="d-seen">--</dd>
-      <dt id="d-witness-label" hidden>witness file</dt><dd id="d-witness" hidden></dd>
-      <dt id="d-gate-label" hidden>gate verdict</dt><dd id="d-gate" hidden></dd>
-    </dl>
-    <div id="d-witness-extra" hidden></div>
-  </div>
-
-  <!-- hidden witness source panels -->
-  <div id="wp-2" hidden><pre class="witness-src">import sys
+    <div class="grid" role="group" aria-label="Changed functions, select one to see its evidence"><button type="button" class="cell cell--agent_witnessed" aria-pressed="true" aria-controls="detail-0" data-i="0" style="--stagger:0"><span class="cell__name">_<wbr>read_<wbr>jsonl_<wbr>file</span><span class="cell__level">never ran, now witnessed by Bob</span></button><button type="button" class="cell cell--agent_witnessed" aria-pressed="false" aria-controls="detail-1" data-i="1" style="--stagger:1"><span class="cell__name">_<wbr>read_<wbr>csv_<wbr>file</span><span class="cell__level">never ran, now witnessed by Bob</span></button><button type="button" class="cell cell--tested" aria-pressed="false" aria-controls="detail-2" data-i="2" style="--stagger:2"><span class="cell__name">_<wbr>main</span><span class="cell__level">only by tests</span></button><button type="button" class="cell cell--tested" aria-pressed="false" aria-controls="detail-3" data-i="3" style="--stagger:3"><span class="cell__name">_<wbr>read_<wbr>rsv_<wbr>file</span><span class="cell__level">only by tests</span></button><button type="button" class="cell cell--tested" aria-pressed="false" aria-controls="detail-4" data-i="4" style="--stagger:4"><span class="cell__name">_<wbr>open_<wbr>and_<wbr>pprint_<wbr>file</span><span class="cell__level">only by tests</span></button><button type="button" class="cell cell--tested" aria-pressed="false" aria-controls="detail-5" data-i="5" style="--stagger:5"><span class="cell__name">_<wbr>pprint_<wbr>file</span><span class="cell__level">only by tests</span></button></div>
+    <div class="detail" id="detail-0" role="region" aria-label="Detail for tabulate._read_jsonl_file"><div class="detail__head"><span class="detail__name">tabulate.<wbr>_<wbr>read_<wbr>jsonl_<wbr>file</span><span class="pill pill--agent_witnessed">never ran, now witnessed by Bob</span></div><dl class="facts"><dt>change</dt><dd>added</dd><dt>file</dt><dd>sample/<wbr>tabulate/<wbr>tabulate/<wbr>_<wbr>_<wbr>init_<wbr>_<wbr>.<wbr>py</dd><dt>seen by</dt><dd>an IBM Bob witness that passed the gate</dd><dt>witness file</dt><dd>witnesses/<wbr>tabulate.<wbr>_<wbr>read_<wbr>jsonl_<wbr>file.<wbr>py</dd><dt>gate verdict</dt><dd>accepted</dd></dl><div class="witness"><pre class="code">import sys
 sys.path.insert(0, &quot;sample/tabulate&quot;)
 
 import io
@@ -507,7 +380,7 @@ with open(&quot;sample/tabulate/examples/people.jsonl&quot;, &quot;r&quot;) as f
 assert len(result) == 2, f&quot;Expected 2 rows, got {len(result)}&quot;
 assert isinstance(result[0], dict), &quot;First element should be a dict&quot;
 assert result[0][&quot;name&quot;] == &quot;Alice&quot;, f&quot;Expected 'Alice', got {result[0]['name']}&quot;
-</pre><ul style="list-style:none;padding:0;margin:4px 0 0 0;font-size:12px"><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> exits with code 0 within 30 seconds</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> executes the function body</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> does not modify any file in the package directory</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> contains a call to the target</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> does not patch the target module</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> asserts a comparison or isinstance/len check on the return value</li></ul></div><div id="wp-3" hidden><pre class="witness-src">import sys
+</pre><div><span class="eyebrow rules-label">Gate rules</span><ul class="rules"><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>exits with code 0 within 30 seconds</span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>executes the function body<small class="nums">4 of 4 body lines ran (lines 3054 to 3057)</small></span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>does not modify any file in the package directory</span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>contains a call to the target</span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>does not patch the target module</span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>asserts a comparison or isinstance/len check on the return value, and the assert runs</span></li></ul></div></div></div><div class="detail" id="detail-1" role="region" aria-label="Detail for tabulate._read_csv_file" hidden><div class="detail__head"><span class="detail__name">tabulate.<wbr>_<wbr>read_<wbr>csv_<wbr>file</span><span class="pill pill--agent_witnessed">never ran, now witnessed by Bob</span></div><dl class="facts"><dt>change</dt><dd>added</dd><dt>file</dt><dd>sample/<wbr>tabulate/<wbr>tabulate/<wbr>_<wbr>_<wbr>init_<wbr>_<wbr>.<wbr>py</dd><dt>seen by</dt><dd>an IBM Bob witness that passed the gate</dd><dt>witness file</dt><dd>witnesses/<wbr>tabulate.<wbr>_<wbr>read_<wbr>csv_<wbr>file.<wbr>py</dd><dt>gate verdict</dt><dd>accepted</dd></dl><div class="witness"><pre class="code">import sys
 sys.path.insert(0, &quot;sample/tabulate&quot;)
 
 import tabulate as _tabulate_module
@@ -517,13 +390,14 @@ with open(&quot;sample/tabulate/examples/people.csv&quot;, newline=&quot;&quot;)
 
 assert len(result) &gt; 0, &quot;Expected non-empty result&quot;
 assert result[0][0] == &quot;id&quot;, f&quot;Expected first header to be 'id', got {result[0][0]!r}&quot;
-</pre><ul style="list-style:none;padding:0;margin:4px 0 0 0;font-size:12px"><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> exits with code 0 within 30 seconds</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> executes the function body</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> does not modify any file in the package directory</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> contains a call to the target</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> does not patch the target module</li><li style="color:var(--lamp)"><span style="font-family:monospace">&#10003;</span> asserts a comparison or isinstance/len check on the return value</li></ul></div>
+</pre><div><span class="eyebrow rules-label">Gate rules</span><ul class="rules"><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>exits with code 0 within 30 seconds</span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>executes the function body<small class="nums">4 of 4 body lines ran (lines 3061 to 3064)</small></span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>does not modify any file in the package directory</span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>contains a call to the target</span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>does not patch the target module</span></li><li class="ok"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>asserts a comparison or isinstance/len check on the return value, and the assert runs</span></li></ul></div></div></div><div class="detail" id="detail-2" role="region" aria-label="Detail for tabulate._main" hidden><div class="detail__head"><span class="detail__name">tabulate.<wbr>_<wbr>main</span><span class="pill pill--tested">only by tests</span></div><dl class="facts"><dt>change</dt><dd>modified</dd><dt>file</dt><dd>sample/<wbr>tabulate/<wbr>tabulate/<wbr>_<wbr>_<wbr>init_<wbr>_<wbr>.<wbr>py</dd><dt>seen by</dt><dd>the project's own test suite, subprocesses included (baseline: tested)</dd></dl></div><div class="detail" id="detail-3" role="region" aria-label="Detail for tabulate._read_rsv_file" hidden><div class="detail__head"><span class="detail__name">tabulate.<wbr>_<wbr>read_<wbr>rsv_<wbr>file</span><span class="pill pill--tested">only by tests</span></div><dl class="facts"><dt>change</dt><dd>added</dd><dt>file</dt><dd>sample/<wbr>tabulate/<wbr>tabulate/<wbr>_<wbr>_<wbr>init_<wbr>_<wbr>.<wbr>py</dd><dt>seen by</dt><dd>the project's own test suite, subprocesses included (baseline: tested)</dd></dl></div><div class="detail" id="detail-4" role="region" aria-label="Detail for tabulate._open_and_pprint_file" hidden><div class="detail__head"><span class="detail__name">tabulate.<wbr>_<wbr>open_<wbr>and_<wbr>pprint_<wbr>file</span><span class="pill pill--tested">only by tests</span></div><dl class="facts"><dt>change</dt><dd>added</dd><dt>file</dt><dd>sample/<wbr>tabulate/<wbr>tabulate/<wbr>_<wbr>_<wbr>init_<wbr>_<wbr>.<wbr>py</dd><dt>seen by</dt><dd>the project's own test suite, subprocesses included (baseline: tested)</dd></dl></div><div class="detail" id="detail-5" role="region" aria-label="Detail for tabulate._pprint_file" hidden><div class="detail__head"><span class="detail__name">tabulate.<wbr>_<wbr>pprint_<wbr>file</span><span class="pill pill--tested">only by tests</span></div><dl class="facts"><dt>change</dt><dd>modified</dd><dt>file</dt><dd>sample/<wbr>tabulate/<wbr>tabulate/<wbr>_<wbr>_<wbr>init_<wbr>_<wbr>.<wbr>py</dd><dt>seen by</dt><dd>the project's own test suite, subprocesses included (baseline: tested)</dd></dl></div>
+  </section>
 
-  <!-- CONTEXT -->
-  <div class="context block" style="--delay:300">
-    <div class="context__card">
-      <span class="context__label">What the change said</span>
-      <pre class="commit-msg">implement support of JSONL and CSV input formats in command line utility
+  <section class="section block" style="--i:5" aria-labelledby="bob-title"><div class="section__head"><h2 class="section__title" id="bob-title">How Bob closed the gap</h2></div><div class="steps"><div class="step"><div class="step__top"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M128,26A102,102,0,1,0,230,128,102.12,102.12,0,0,0,128,26Zm6,191.8V184a6,6,0,0,0-12,0v33.8A90.15,90.15,0,0,1,38.2,134H72a6,6,0,0,0,0-12H38.2A90.15,90.15,0,0,1,122,38.2V72a6,6,0,0,0,12,0V38.2A90.15,90.15,0,0,1,217.8,122H184a6,6,0,0,0,0,12h33.8A90.15,90.15,0,0,1,134,217.8Z"/></svg><span class="step__n">01</span></div><p class="step__title">Witness mode</p><p class="step__text">A custom Bob mode that can edit only witnesses/*.py. It never touches product code.</p></div><div class="step"><div class="step__top"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M222,64a30,30,0,1,0-36,29.4V112a10,10,0,0,1-10,10H80a10,10,0,0,1-10-10V93.4a30,30,0,1,0-12,0V112a22,22,0,0,0,22,22h42v28.6a30,30,0,1,0,12,0V134h42a22,22,0,0,0,22-22V93.4A30.05,30.05,0,0,0,222,64ZM46,64A18,18,0,1,1,64,82,18,18,0,0,1,46,64ZM146,192a18,18,0,1,1-18-18A18,18,0,0,1,146,192ZM192,82a18,18,0,1,1,18-18A18,18,0,0,1,192,82Z"/></svg><span class="step__n">02</span></div><p class="step__title">2 subagents in parallel</p><p class="step__text">One per function nobody had seen running. Each follows the witness-hunt skill.</p></div><div class="step"><div class="step__top"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224.42,104.2c-3.9-4.07-7.93-8.27-9.55-12.18-1.5-3.63-1.58-9-1.67-14.68-.14-9.38-.3-20-7.42-27.12S188,42.94,178.66,42.8c-5.68-.09-11-.17-14.68-1.67-3.91-1.62-8.11-5.65-12.18-9.55C145.16,25.22,137.64,18,128,18s-17.16,7.22-23.8,13.58c-4.07,3.9-8.27,7.93-12.18,9.55-3.63,1.5-9,1.58-14.68,1.67-9.38.14-20,.3-27.12,7.42S42.94,68,42.8,77.34c-.09,5.68-.17,11-1.67,14.68-1.62,3.91-5.65,8.11-9.55,12.18C25.22,110.84,18,118.36,18,128s7.22,17.16,13.58,23.8c3.9,4.07,7.93,8.27,9.55,12.18,1.5,3.63,1.58,9,1.67,14.68.14,9.38.3,20,7.42,27.12S68,213.06,77.34,213.2c5.68.09,11,.17,14.68,1.67,3.91,1.62,8.11,5.65,12.18,9.55C110.84,230.78,118.36,238,128,238s17.16-7.22,23.8-13.58c4.07-3.9,8.27-7.93,12.18-9.55,3.63-1.5,9-1.58,14.68-1.67,9.38-.14,20-.3,27.12-7.42s7.28-17.74,7.42-27.12c.09-5.68.17-11,1.67-14.68,1.62-3.91,5.65-8.11,9.55-12.18C230.78,145.16,238,137.64,238,128S230.78,110.84,224.42,104.2Zm-8.66,39.3c-4.67,4.86-9.5,9.9-12,15.9-2.38,5.74-2.48,12.52-2.58,19.08-.11,7.44-.23,15.14-3.9,18.82s-11.38,3.79-18.82,3.9c-6.56.1-13.34.2-19.08,2.58-6,2.48-11,7.31-15.91,12-5.25,5-10.68,10.24-15.49,10.24s-10.24-5.21-15.5-10.24c-4.86-4.67-9.9-9.5-15.9-12-5.74-2.38-12.52-2.48-19.08-2.58-7.44-.11-15.14-.23-18.82-3.9s-3.79-11.38-3.9-18.82c-.1-6.56-.2-13.34-2.58-19.08-2.48-6-7.31-11-12-15.91C35.21,138.24,30,132.81,30,128s5.21-10.24,10.24-15.5c4.67-4.86,9.5-9.9,12-15.9,2.38-5.74,2.48-12.52,2.58-19.08.11-7.44.23-15.14,3.9-18.82s11.38-3.79,18.82-3.9c6.56-.1,13.34-.2,19.08-2.58,6-2.48,11-7.31,15.91-12C117.76,35.21,123.19,30,128,30s10.24,5.21,15.5,10.24c4.86,4.67,9.9,9.5,15.9,12,5.74,2.38,12.52,2.48,19.08,2.58,7.44.11,15.14.23,18.82,3.9s3.79,11.38,3.9,18.82c.1,6.56.2,13.34,2.58,19.08,2.48,6,7.31,11,12,15.91,5,5.25,10.24,10.68,10.24,15.49S220.79,138.24,215.76,143.5ZM172.24,99.76a6,6,0,0,1,0,8.48l-56,56a6,6,0,0,1-8.48,0l-24-24a6,6,0,0,1,8.48-8.48L112,151.51l51.76-51.75A6,6,0,0,1,172.24,99.76Z"/></svg><span class="step__n">03</span></div><p class="step__title">2 of 2 accepted by the gate</p><p class="step__text">Each witness had to pass all six rules before the function was promoted.</p></div></div><div class="cost"><span class="cost__main nums"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M224.56,103.81C213.43,97.75,198.47,93.39,182,91.34V84c0-12.12-9.58-23.1-27-30.93C139.16,45.93,118.2,42,96,42S52.84,45.93,37,53.07C19.58,60.9,10,71.88,10,84v40c0,12.12,9.58,23.1,27,30.93,10.49,4.72,23.21,8,37,9.73V172c0,12.12,9.58,23.1,27,30.93C116.84,210.07,137.8,214,160,214s43.16-3.93,59-11.07c17.39-7.83,27-18.81,27-30.93V132C246,121.35,238.39,111.34,224.56,103.81Zm-5.74,10.54C228.61,119.68,234,126,234,132c0,14.19-30.39,30-74,30a166.9,166.9,0,0,1-21.21-1.34A110.79,110.79,0,0,0,155,154.93c17.39-7.83,27-18.81,27-30.93V103.43C196.4,105.36,209.3,109.16,218.82,114.35ZM108.16,153.58c-3.92.27-8,.42-12.16.42-5.3,0-10.4-.24-15.28-.67a2.22,2.22,0,0,0-.37,0c-3.58-.33-7-.77-10.35-1.3V124.12A178,178,0,0,0,96,126a178,178,0,0,0,26-1.88V152c-4.34.69-8.91,1.22-13.69,1.56ZM170,105.89V124c0,9.54-13.75,19.8-36,25.51V121.85a115,115,0,0,0,21-6.92A66.2,66.2,0,0,0,170,105.89ZM96,54c43.61,0,74,15.81,74,30s-30.39,30-74,30S22,98.19,22,84,52.39,54,96,54ZM22,124V105.89a66.2,66.2,0,0,0,15,9,115,115,0,0,0,21,6.92v27.66C35.75,143.8,22,133.54,22,124Zm64,48v-6.28c3.3.18,6.63.28,10,.28q5.91,0,11.66-.37A123.17,123.17,0,0,0,122,169.84v27.67C99.75,191.8,86,181.54,86,172Zm48,28V172.1a177.84,177.84,0,0,0,26,1.9,178,178,0,0,0,26-1.88V200a170,170,0,0,1-52,0Zm64-2.49V169.85a115,115,0,0,0,21-6.92,66.2,66.2,0,0,0,15-9V172C234,181.54,220.25,191.8,198,197.51Z"/></svg>0.881 Bobcoins for the whole hunt, 0.44 per witness</span><a class="textlink" href="https://github.com/kasbsquall/witnessed/tree/main/bob_sessions">Bob session screenshots <svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M198,64V168a6,6,0,0,1-12,0V78.48L68.24,196.24a6,6,0,0,1-8.48-8.48L177.52,70H88a6,6,0,0,1,0-12H192A6,6,0,0,1,198,64Z"/></svg></a></div></section>
+
+  <section class="section block" style="--i:6" aria-label="The change and what ran">
+    <div class="context">
+      <div class="card"><span class="eyebrow">What the change said</span><pre class="commit">implement support of JSONL and CSV input formats in command line utility
 
 fix #173
 
@@ -534,8 +408,7 @@ New CLI parameter:
 
 --read FILEFORMAT
   where FILEFORMAT can be &quot;rsv&quot; (default), &quot;csv&quot;, &quot;jsonl&quot;
-
-Deprecated CLI parameter:
+</pre><details class="more"><summary class="nums">Show the rest of the message, 25 more lines</summary><pre class="commit">Deprecated CLI parameter:
 
 --header
 
@@ -559,86 +432,33 @@ cat ./examples/people.jsonl | tabulate -r jsonl -f grid --headers 'id:ID,name:Fi
 |    2 | Bob          | bob@example.com   |
 +------+--------------+-------------------+
 
-(Upstream python-tabulate c327d6c, applied unchanged to sample/tabulate.)
-
-Upstream-Repo: https://github.com/astanin/python-tabulate
-Upstream-Commit: c327d6c</pre>
+(Upstream python-tabulate c327d6c, applied unchanged to sample/tabulate.)</pre></details></div>
+      <div class="card"><span class="eyebrow">What actually ran</span>
+        <table class="counts nums">
+          <tr><th scope="col">level</th><th scope="col">before Bob</th><th scope="col">after Bob</th></tr>
+          <tr><td><span class="row-label"><span class="swatch swatch--used"></span>used in real runs</span></td><td class="n0">0</td><td class="n0">0</td></tr><tr><td><span class="row-label"><span class="swatch swatch--tested"></span>only by tests</span></td><td class="n-tested">4</td><td class="n-tested">4</td></tr><tr><td><span class="row-label"><span class="swatch swatch--agent_witnessed"></span>never ran, now witnessed by Bob</span></td><td class="n0">0</td><td class="n-agent_witnessed">2</td></tr><tr><td><span class="row-label"><span class="swatch swatch--unwitnessed"></span>never seen running</span></td><td class="n-unwitnessed">2</td><td class="n0">0</td></tr>
+          <tr class="total"><td>total changed</td><td>6</td><td>6</td></tr>
+        </table>
+      </div>
     </div>
-    <div class="context__card">
-      <span class="context__label">What actually ran</span>
-      <table class="counts-table nums">
-        <tr>
-          <th></th>
-          <th>before</th>
-          <th>after</th>
-        </tr>
-        <tr><td>used in real runs</td><td>0</td><td>0</td></tr>
-        <tr><td>only by tests</td><td>4</td><td>4</td></tr>
-        <tr><td>never ran, now witnessed</td><td>0</td><td>2</td></tr>
-        <tr><td>never seen running</td><td>2</td><td>0</td></tr>
-        <tr class="total"><td>total changed</td><td>6</td><td>6</td></tr>
-      </table>
-    </div>
-  </div>
+  </section>
 
-  <!-- FOOTER -->
-  <footer class="footer block" style="--delay:360"><a href="https://github.com/kasbsquall/witnessed" style="color:var(--muted);text-decoration:underline">https://github.com/kasbsquall/witnessed</a> &nbsp;&middot;&nbsp; Made with IBM Bob</footer>
+  <section class="section block" style="--i:7" aria-labelledby="hist-title"><div class="section__head"><h2 class="section__title" id="hist-title">Across the project's history</h2><span class="eyebrow nums">101 commits replayed, 0 skipped</span></div><div class="history"><div><p class="history__count nums"><span class="is-alert">2</span><span class="of"> of 88</span></p><p class="history__sub">commits changed a function their own tests never ran</p></div><div class="history__facts"><p class="row nums"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M134,80v44.6l37.09,22.25a6,6,0,0,1-6.18,10.3l-40-24A6,6,0,0,1,122,128V80a6,6,0,0,1,12,0Zm-6-46A93.4,93.4,0,0,0,61.51,61.56c-8.58,8.68-16,17-23.51,25.8V64a6,6,0,0,0-12,0v40a6,6,0,0,0,6,6H72a6,6,0,0,0,0-12H44.73C52.86,88.29,60.79,79.35,70,70a82,82,0,1,1,1.7,117.62,6,6,0,1,0-8.24,8.72A94,94,0,1,0,128,34Z"/></svg><span><b>4 of 301</b> changed functions never ran under the suite of their own commit.</span></p><p class="row"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M198,64V168a6,6,0,0,1-12,0V78.48L68.24,196.24a6,6,0,0,1-8.48-8.48L177.52,70H88a6,6,0,0,1,0-12H192A6,6,0,0,1,198,64Z"/></svg><span>Flagged: <a class="textlink" href="https://github.com/astanin/python-tabulate/commit/c327d6c">c327d6c</a>, <a class="textlink" href="https://github.com/astanin/python-tabulate/commit/b47acc1">b47acc1</a>. Every other commit raised nothing. This counts alarms; the history has no ground truth for gaps nobody noticed.</span></p><p class="row"><svg class="icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" focusable="false"><path d="M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z"/></svg><span>Measured with Witnessed's own library by <a class="textlink" href="https://github.com/kasbsquall/witnessed/blob/main/bench/history.py">bench/history.py</a>, written by Claude (Anthropic), not by Bob.</span></p></div></div></section>
 
-</div>
-
+  <footer class="footer"><a class="textlink" href="https://github.com/kasbsquall/witnessed">github.com/kasbsquall/witnessed</a><span>Made with IBM Bob</span></footer>
+</main>
 <script>
 (function () {
   var cells = document.querySelectorAll('.cell');
-  var detail = document.getElementById('fn-detail');
-  var dQname   = document.getElementById('d-qualname');
-  var dChange  = document.getElementById('d-change');
-  var dLevel   = document.getElementById('d-level');
-  var dSeen    = document.getElementById('d-seen');
-  var dWLabel  = document.getElementById('d-witness-label');
-  var dWit     = document.getElementById('d-witness');
-  var dGLabel  = document.getElementById('d-gate-label');
-  var dGate    = document.getElementById('d-gate');
-  var dExtra   = document.getElementById('d-witness-extra');
-
-  function selectCell(btn) {
-    cells.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
-    btn.setAttribute('aria-pressed', 'true');
-    dQname.textContent  = btn.dataset.qualname || '--';
-    dChange.textContent = btn.dataset.change   || '--';
-    dLevel.textContent  = btn.dataset.level    || '--';
-    dSeen.textContent   = btn.dataset.seen     || '--';
-    var wit  = btn.dataset.witness || '';
-    var gate = btn.dataset.gate    || '';
-    if (wit) {
-      dWLabel.hidden = false; dWit.hidden = false; dWit.textContent = wit;
-    } else {
-      dWLabel.hidden = true;  dWit.hidden = true;  dWit.textContent = '';
-    }
-    if (gate) {
-      dGLabel.hidden = false; dGate.hidden = false; dGate.textContent = gate;
-    } else {
-      dGLabel.hidden = true;  dGate.hidden = true;  dGate.textContent = '';
-    }
-    // Show witness source and gate rules if available.
-    var idx = btn.id.replace('btn-', '');
-    var wp = document.getElementById('wp-' + idx);
-    if (wp) {
-      dExtra.hidden = false;
-      dExtra.innerHTML = wp.innerHTML;
-    } else {
-      dExtra.hidden = true;
-      dExtra.innerHTML = '';
-    }
-  }
-
   cells.forEach(function (btn) {
-    btn.addEventListener('click', function () { selectCell(btn); });
+    btn.addEventListener('click', function () {
+      cells.forEach(function (c) {
+        var on = c === btn;
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        document.getElementById('detail-' + c.dataset.i).hidden = !on;
+      });
+    });
   });
-
-  // Select the first cell that is aria-pressed="true" on load.
-  var def = document.querySelector('.cell[aria-pressed="true"]');
-  if (!def && cells.length) { def = cells[0]; }
-  if (def) { selectCell(def); }
 })();
 </script>
 </body>
