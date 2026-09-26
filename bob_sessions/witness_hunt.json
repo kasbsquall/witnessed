@@ -1,8 +1,9 @@
 {
-  "task": 8,
+  "task": 13,
   "mode": "Witness",
-  "task_bobcoins": 0.65306,
-  "subagent_bobcoins": [0.114094, 0.114258],
-  "source": "Costs recorded by IBM Bob in ~/.bob/db/bob.db (table tasks, column costs.cost); the two subagents are recorded as child tasks of task 8.",
-  "screenshots": ["nightshift_task08_witness_hunt_summary.png", "nightshift_task08_witness_hunt_parallel_subagents.png"]
+  "task_bobcoins": 1.6012,
+  "subagent_bobcoins": [0.8088, 0.6827],
+  "note": "Includes a first attempt the gate rejected (nonzero_exit) and the subagents' fixes.",
+  "source": "Costs recorded by IBM Bob in ~/.bob/db/bob.db (table tasks, column costs.cost). The task cost already includes its two subagents, which Bob also lists as child tasks.",
+  "screenshots": ["nightshift_task13_live_witness_hunt_summary.png"]
 }

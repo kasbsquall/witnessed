@@ -231,12 +231,14 @@ def _bob_section(hunt: dict | None, gate_verdicts: dict[str, dict], remote_url: 
         return ""
     subagents = hunt.get("subagent_bobcoins", [])
     accepted = sum(1 for v in gate_verdicts.values() if v.get("accepted"))
-    total_cost = hunt.get("task_bobcoins", 0) + sum(subagents)
+    # Bob's task cost already includes the subagents it started.
+    total_cost = hunt.get("task_bobcoins", 0)
     per_witness = total_cost / accepted if accepted else 0
     shots = f"{remote_url}/tree/main/bob_sessions" if remote_url else "bob_sessions/"
+    note_html = f"<span>{_escape(hunt['note'])}</span>" if hunt.get("note") else ""
     steps = [
         ("crosshair-simple", "Witness mode",
-         "A custom Bob mode that can edit only witnesses/*.py. It never touches product code."),
+         "A custom Bob mode whose file edits are restricted to witnesses/*.py."),
         ("git-fork", f"{len(subagents)} subagents in parallel",
          "One per function nobody had seen running. Each follows the witness-hunt skill."),
         ("seal-check", f"{accepted} of {len(gate_verdicts)} accepted by the gate",
@@ -254,6 +256,7 @@ def _bob_section(hunt: dict | None, gate_verdicts: dict[str, dict], remote_url: 
         '<div class="cost">'
         f'<span class="cost__main nums">{icon("coins")}{total_cost:.3f} Bobcoins for the whole hunt, '
         f"{per_witness:.2f} per witness</span>"
+        f"{note_html}"
         f'<a class="textlink" href="{_escape(shots)}">Bob session screenshots {icon("arrow-up-right")}</a>'
         "</div></section>"
     )
