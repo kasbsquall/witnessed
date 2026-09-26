@@ -1,0 +1,8 @@
+{
+  "task": 8,
+  "mode": "Witness",
+  "task_bobcoins": 0.65306,
+  "subagent_bobcoins": [0.114094, 0.114258],
+  "source": "Costs recorded by IBM Bob in ~/.bob/db/bob.db (table tasks, column costs.cost); the two subagents are recorded as child tasks of task 8.",
+  "screenshots": ["nightshift_task08_witness_hunt_summary.png", "nightshift_task08_witness_hunt_parallel_subagents.png"]
+}

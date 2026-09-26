@@ -141,7 +141,8 @@ def test_agent_witnessed_cell_shows_witness_file() -> None:
             "body_lines_executed": [5],
         }
     }
-    html = build_report(scan_data, gate_verdicts, "")
+    # Names carry <wbr> break points in the markup; the visible text is unchanged.
+    html = build_report(scan_data, gate_verdicts, "").replace("<wbr>", "")
 
     assert "witnesses/pkg.foo.py" in html
     assert "accepted" in html
