@@ -17,4 +17,15 @@ The code in `witnessed/`, `tests/` and `.bob/` was written by IBM Bob in these t
 | 11 | Report: before and after, one color per meaning, upstream commit, witness code and gate rules | Agent | 0.720 | [task11](nightshift_task11_report_before_after_summary.png) |
 | 12 | Gate hardening: hash every package file, reject trivial assertions | Agent | 2.965 | [task12](nightshift_task12_gate_hardening_summary.png) |
 
-Total: 33.703 Bobcoins of the 40 available.
+Total: 33.703 Bobcoins of the 40 available. Bob also recorded the two subagents of task 8 as child tasks, 0.114 Bobcoins each (0.228 in total, listed in `witness_hunt.json`).
+
+## Changes made after the Bob sessions
+
+After the second review round, Claude (Anthropic) changed code that Bob had written. None of it was done in Bob, and no Bobcoins were spent on it.
+
+- Gate, rule 2: `scan.json` did not carry the body range of each function, so the gate skipped rule 2 without saying so, and a witness that shadowed the target name was accepted. The scan now records the range and the gate rejects any witness when the range is unknown (`witnessed/cli.py`, `witnessed/gate.py`).
+- Gate, rule 6: tautologies, a result name rebound before the assert, and asserts that never execute are now rejected.
+- Five regression tests for those cases at the end of `tests/test_gate.py`.
+- Report: new layout and copy (`witnessed/report.py`, `witnessed/report_css.py`, `witnessed/_icons.py` with Phosphor Light icons, MIT), including the section on how Bob closed the gap, which reads `witness_hunt.json`, and the history section, which reads `bench/history.json`.
+- `pyproject.toml`: the build backend was wrong and `pip install -e .` failed; pytest is now a dependency because the tested baseline needs it.
+

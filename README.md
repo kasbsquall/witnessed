@@ -18,6 +18,7 @@ The branches are `hist/c327d6c-base` (tabulate at 164b367, the parent), `hist/c3
 
 ```
 pip install -e .
+git fetch origin hist/c327d6c-base:hist/c327d6c-base hist/c327d6c-witnessed:hist/c327d6c-witnessed
 git checkout hist/c327d6c
 witnessed scan --base hist/c327d6c-base --head hist/c327d6c
 git restore --source=hist/c327d6c-witnessed witnesses
@@ -30,7 +31,7 @@ The scan prints "2 of 6 changed functions were never seen running", both gates p
 
 ## How Bob is used
 
-The `Witness` custom mode (defined in `.bob/custom_modes.yaml`) can edit only `witnesses/*.py`. It loads the `witness-hunt` skill and spawns one parallel subagent per unwitnessed function. Bob also wrote the code of this repository during the hackathon. The task summary screenshots of every Bob session are in `bob_sessions/`.
+The `Witness` custom mode (defined in `.bob/custom_modes.yaml`) can edit only `witnesses/*.py`. It loads the `witness-hunt` skill and spawns one parallel subagent per unwitnessed function. Bob wrote the code in `witnessed/`, `tests/` and `.bob/` in twelve tasks during the hackathon; the task summary screenshot of every session is in `bob_sessions/`. After the second review round, Claude (Anthropic) fixed a defect in the gate and in the report. Those changes are listed in [bob_sessions/README.md](bob_sessions/README.md).
 
 ## Evidence levels
 
@@ -46,21 +47,21 @@ The `Witness` custom mode (defined in `.bob/custom_modes.yaml`) can edit only `w
 A witness promotes a function to `agent_witnessed` only if all of the following hold:
 
 1. Exit code 0 within 30 seconds.
-2. Coverage shows executed lines inside the target body.
+2. Coverage shows executed lines inside the target body. If the body range is unknown, the witness is rejected.
 3. No .py file in the package directory was modified during the run.
 4. The witness calls the target through its package path.
 5. The witness never assigns attributes of the target module.
-6. The witness asserts a comparison or isinstance/len check on the return value.
+6. The witness asserts a comparison or isinstance/len check on the return value, and that assert actually runs.
 
 ## What the gate does not prove
 
 Rule 4 checks that the witness calls the target by name through the package path (e.g. `tabulate._is_file(...)` or `from tabulate import _is_file; _is_file(...)`). This resolves a name, not a binding. A witness can shadow the name, for example by assigning `_is_file = lambda x: True` before the call, and still satisfy rule 4 syntactically. The gate does not verify that the name was not rebound.
 
-Rule 2 is the defence against this: coverage measures which source lines inside the real function body executed. If the name was rebound to a different callable the original body lines will not appear in the coverage report and the gate will reject with `body_not_executed`. The combination of rule 4 (name check) and rule 2 (body coverage) makes it substantially harder to fool the gate, but a witness that replaces the body with identical source could still pass. The gate is a heuristic.
+Rule 2 is the defence against this: coverage measures which source lines inside the real function body executed. If the name was rebound to a different callable the original body lines will not appear in the coverage report and the gate will reject with `body_not_executed`. Until the second review round this defence did not run in the documented flow: `scan.json` did not carry the body range and the gate skipped rule 2 silently, so a shadowing witness was accepted. The scan now records the range, the gate fails closed without it, and `tests/test_gate.py::test_reject_shadowed_name` covers the case. The combination of rule 4 (name check) and rule 2 (body coverage) makes it substantially harder to fool the gate, but a witness that replaces the body with identical source could still pass. The gate is a heuristic.
 
 Rule 3 now hashes every .py file under the package directory, not only the file containing the target. This closes two gaps: a witness could previously patch a sibling module, and because the Witness mode has the execute group it could also write package files through the shell (the edit tool fileRegex only restricts the edit tool). Both paths now trigger `target_modified`.
 
-Rule 6 now requires a comparison (==, !=, <, <=, >, >=, in, not in), an isinstance check, or a len-based comparison on the return value. Bare truthiness (`assert result`) and identity-against-None checks (`assert result is None`, `assert result is not None`) are rejected with `no_assertion`. The gate still does not verify that the assertion is correct or meaningful; a witness that compares the result to a wrong expected value will pass rule 6.
+Rule 6 now requires a comparison (==, !=, <, <=, >, >=, in, not in), an isinstance check, or a len-based comparison on the return value. Bare truthiness (`assert result`) and identity-against-None checks (`assert result is None`, `assert result is not None`) are rejected with `no_assertion`, and so are tautologies (`assert result == result`), a result name rebound before the assert, and asserts that never execute (inside `if False:`). The gate still does not judge how strong the assertion is: a weak but true check such as `assert len(result) >= 0` passes rule 6.
 
 ## How it was validated
 
@@ -70,7 +71,7 @@ A function added and never called is reported as never seen running. Checking re
 
 `bench/history.py` replays the history of python-tabulate with Witnessed's own library: for each of the 101 non-merge commits that touch `tabulate/` from 2022-05-20 to 268615a, it takes the functions that commit changed, runs that commit's own test suite under coverage (subprocesses included) and counts the changed functions whose body never executed. It measures only the "tested" level, because tabulate's history has no real-use baseline.
 
-Result (`bench/history.json`): 88 commits changed at least one function, none was skipped, and 2 of those 88 changed a function its own tests never ran, 4 of 301 changed functions in total. Both are consecutive commits of upstream PR #419 and flag the same two functions: c327d6c adds `_read_jsonl_file` and `_read_csv_file`, and b47acc1 moves them to `tabulate/cli.py`. The maintainer's next commit, 17bf1cf, adds the tests. So on a well-tested project Witnessed stayed silent on the other 86 commits and fired on a single pull request, where the gap was real and the maintainer closed it two commits later.
+Result (`bench/history.json`): 88 commits changed at least one function, none was skipped, and 2 of those 88 changed a function its own tests never ran, 4 of 301 changed functions in total. Both are consecutive commits of upstream PR #419 and flag the same two functions: c327d6c adds `_read_jsonl_file` and `_read_csv_file`, and b47acc1 moves them to `tabulate/cli.py`. The maintainer's next commit, 17bf1cf, adds the tests. So on a well-tested project Witnessed raised nothing on the other 86 commits and fired on a single pull request, where the gap was real and the maintainer closed it two commits later. This counts alarms; it is not a precision or recall figure, because the history has no ground truth for gaps that nobody noticed.
 
 Two upstream tests, `test_internal.py::test_wrap_text_wide_chars` and `test_textwrapper.py::test_wrap_mixed_string`, hang at some October 2024 commits and are deselected. Any commit whose suite still hits the 30 s per-test timeout is reported as skipped instead of counted. `bench/history.py` was written by Claude (Anthropic) as an analysis script, not by IBM Bob. To rerun it you need a full clone of python-tabulate and `pytest-timeout`:
 
