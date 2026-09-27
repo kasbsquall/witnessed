@@ -4,7 +4,7 @@ Your agent says it tested the change. Witnessed shows which of the functions it 
 
 **Live report:** https://kasbsquall.github.io/witnessed/ (the real case below, no install needed).
 
-**Demo video:** https://youtu.be/bU2E0hyezjk (2:40, the scan, IBM Bob's witness hunt recorded live, and the gate).
+**Demo video:** https://youtu.be/u3lPoXOdrUQ (2:49, the scan, IBM Bob's witness hunt recorded live, the gate, and pySigma #415).
 
 **On pull requests written by a coding agent:** of 44 merged pull requests that GitHub's Copilot coding agent wrote for SigmaHQ's pySigma libraries, 33 changed functions and Witnessed flagged one, [pySigma #415](https://github.com/SigmaHQ/pySigma/pull/415). All 1,239 tests pass at its merge commit, and the five functions that download, parse and cache the new MITRE data never run, because a fixture added in the same pull request replaces the cache for every test. Details in [Merged pull requests written by a coding agent](#merged-pull-requests-written-by-a-coding-agent).
 
