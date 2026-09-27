@@ -270,3 +270,124 @@ def test_qualname_includes_module_path(tmp_path: Path) -> None:
     assert "mypkg.sub.helper" in qualnames
     # No bare "helper" without module prefix
     assert "helper" not in qualnames
+
+
+# ---------------------------------------------------------------------------
+# Stub detection: Unit.stub field
+# ---------------------------------------------------------------------------
+
+
+def _units_from(source: str) -> list[Unit]:
+    """Parse *source* with units_from_source using a dummy file/pkg path."""
+    from witnessed.units import units_from_source
+    return units_from_source(textwrap.dedent(source), "pkg/mod.py", "pkg")
+
+
+def test_stub_docstring_only() -> None:
+    """A function whose body is only a docstring is a stub."""
+    units = _units_from("""\
+        def f():
+            \"\"\"Just a docstring.\"\"\"
+        """)
+    assert units[0].stub is True
+
+
+def test_stub_pass() -> None:
+    """A function whose body is only `pass` is a stub."""
+    units = _units_from("""\
+        def f():
+            pass
+        """)
+    assert units[0].stub is True
+
+
+def test_stub_ellipsis() -> None:
+    """A function whose body is only `...` is a stub."""
+    units = _units_from("""\
+        def f():
+            ...
+        """)
+    assert units[0].stub is True
+
+
+def test_stub_raise_not_implemented() -> None:
+    """A function that raises NotImplementedError (bare) is a stub."""
+    units = _units_from("""\
+        def f():
+            raise NotImplementedError
+        """)
+    assert units[0].stub is True
+
+
+def test_stub_raise_not_implemented_with_msg() -> None:
+    """A function that raises NotImplementedError('msg') is a stub."""
+    units = _units_from("""\
+        def f():
+            raise NotImplementedError("not yet")
+        """)
+    assert units[0].stub is True
+
+
+def test_stub_abstractmethod_docstring() -> None:
+    """An @abstractmethod whose body is a docstring is a stub."""
+    units = _units_from("""\
+        from abc import abstractmethod
+
+        class Base:
+            @abstractmethod
+            def f(self):
+                \"\"\"Override me.\"\"\"
+        """)
+    method = next(u for u in units if u.qualname.endswith(".f"))
+    assert method.stub is True
+
+
+def test_not_stub_real_code() -> None:
+    """A function with real statements is not a stub."""
+    units = _units_from("""\
+        def f():
+            x = 1
+            return x
+        """)
+    assert units[0].stub is False
+
+
+# ---------------------------------------------------------------------------
+# changed_units must skip stubs
+# ---------------------------------------------------------------------------
+
+
+def test_changed_units_skips_stub(tmp_path: Path) -> None:
+    """changed_units must not return a unit whose stub flag is True."""
+    import subprocess
+    from witnessed.diff import changed_units
+
+    # Set up a git repo with a stub method added in a commit.
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    pkg = repo / "mypkg"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("")
+
+    # Initial commit: empty module.
+    subprocess.run(["git", "init", "-b", "main"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "T"], cwd=repo, check=True, capture_output=True)
+    (pkg / "mod.py").write_text("")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-m", "init"], cwd=repo, check=True, capture_output=True)
+    base = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+    # Add a stub method to the module.
+    (pkg / "mod.py").write_text("def stub_fn():\n    raise NotImplementedError\n")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-m", "add stub"], cwd=repo, check=True, capture_output=True)
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+    result = changed_units(base, head, repo_root=repo, package_dir=pkg)
+    # The stub function must NOT appear in the results.
+    assert not any(cu.qualname.endswith("stub_fn") for cu in result)

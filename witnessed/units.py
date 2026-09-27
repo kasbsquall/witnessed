@@ -12,6 +12,7 @@ class Unit:
     def_line: int
     body_start: int  # node.body[0].lineno: first line of the body
     body_end: int    # node.end_lineno
+    stub: bool = False
 
 
 def _stmt_sublists(node: ast.stmt) -> list[list[ast.stmt]]:
@@ -50,6 +51,38 @@ def _stmt_sublists(node: ast.stmt) -> list[list[ast.stmt]]:
     return sub
 
 
+def _is_stub_body(body: list[ast.stmt]) -> bool:
+    """Return True if *body* is a stub: empty after dropping a leading docstring,
+    or consists only of pass / ... / raise NotImplementedError[(msg)]."""
+    stmts = list(body)
+    # Drop leading docstring.
+    if stmts and isinstance(stmts[0], ast.Expr) and isinstance(stmts[0].value, ast.Constant) and isinstance(stmts[0].value.value, str):
+        stmts = stmts[1:]
+    if not stmts:
+        return True
+    for stmt in stmts:
+        if isinstance(stmt, ast.Pass):
+            continue
+        if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Constant) and stmt.value.value is ...:
+            continue
+        if isinstance(stmt, ast.Raise) and stmt.cause is None:
+            exc = stmt.exc
+            if exc is None:
+                continue
+            # raise NotImplementedError
+            if isinstance(exc, ast.Name) and exc.id == "NotImplementedError":
+                continue
+            # raise NotImplementedError(...) or raise NotImplementedError("msg")
+            if (
+                isinstance(exc, ast.Call)
+                and isinstance(exc.func, ast.Name)
+                and exc.func.id == "NotImplementedError"
+            ):
+                continue
+        return False
+    return True
+
+
 def _collect(
     nodes: list[ast.stmt],
     prefix: str,
@@ -66,6 +99,7 @@ def _collect(
                     def_line=node.lineno,
                     body_start=node.body[0].lineno,
                     body_end=node.end_lineno,
+                    stub=_is_stub_body(node.body),
                 )
             )
             # Recurse into the function body for nested functions.

@@ -154,6 +154,8 @@ def changed_units(
     # --- 4. Classify units -------------------------------------------------------
     results: list[ChangedUnit] = []
     for unit in head_units:
+        if unit.stub:
+            continue
         file_changes = changed_lines.get(unit.file)
         if not file_changes:
             continue
