@@ -1,0 +1,29 @@
+553	c073a42f24	2026-09-23	+59/-22	fix: correctly handle escaped backslash before placeholder i
+521	ebc12ff4a4	2026-08-03	+3442/-1256	docs: major documentation overhaul
+513	ee215a5574	2026-07-26	+42/-0	Fix SigmaRule.to_dict() failing after MapStringTransformatio
+508	3affb4b32e	2026-07-25	+135/-1	Fix ExtractFieldsTransformation silent data loss on partial 
+485	9322544c61	2026-07-05	+10/-1	Expand placeholder character set to match Sigma spec
+478	e1ab85dd54	2026-06-02	+346/-344	Update dependencies and fix mypy type errors
+477	ef616f0b80	2026-06-01	+2/-2	Fix Dependabot dependency parsing for date-versioned package
+476	a4f5b4202f	2026-06-01	+45/-0	Enforce black formatting and mypy checks in Copilot agentic 
+475	adc694d4eb	2026-06-01	+76/-5	Implement `neq` modifier for boolean NOT match
+473	9be9e26fdc	2026-06-01	+206/-11	Fix filter rules with wildcard conditions (`1/any/all of pat
+471	cf3c15d4e6	2026-06-01	+1026/-6	Add external data source placeholder transformations (File, 
+468	bdd9885404	2026-06-01	+69/-0	fix: SigmaRule.to_dict() fails after field_name_mapping tran
+467	aca1185e31	2026-04-21	+110/-2	fix: cache lookup fails after update-cache with custom URL i
+465	993450715d	2026-04-14	+12/-2	Defer MITRE data loading in tag validators to first use
+452	5b7b7e3e45	2026-04-07	+82/-34	Perf: cache condition parsing, type hints, and optimize stri
+451	f49862d6e6	2026-04-06	+516/-560	Modernize type hints and dispatchers for Python 3.10+
+450	4414a8f5e4	2026-04-06	+1209/-1892	Add test coverage for uncovered error paths and edge cases
+445	f5966ee2da	2026-03-20	+30/-3	Extend `replace_string` transformation to handle numeric val
+435	7b1e7c312b	2026-01-23	+57/-2	Fix ConvertTypeTransformation emitting Python repr for Sigma
+426	8ab7582934	2025-11-30	+254/-6	Add PyPI-based pySigma version dependency detection for plug
+416	bd971497ed	2025-11-14	+96/-6	Support list-type attributes in RuleAttributeCondition
+415	07eed3b092	2025-11-09	+393/-3673	Replace static MITRE data with on-demand API loading
+413	3515150296	2025-11-06	+39/-14	Fix SigmaStatus and SigmaLevel equality operators to return 
+408	e3c521ea77	2025-11-02	+1/-1	Update black version in pre-commit config to match poetry.lo
+406	d5e61ef027	2025-11-09	+143/-3	Fix keyword search semantics loss when mapping None to field
+405	130d27c73c	2025-11-09	+66/-1	Fix AddConditionTransformation to handle empty conditions
+403	f2b53056a8	2025-11-02	+237/-0	Add GitHub Copilot instructions for repository
+399	c9b56ae5d5	2025-11-02	+206/-3	Add support for importing Python helper functions into Jinja
+398	0b327c152f	2025-11-02	+469/-8	Add support for Sigma Spec 2.1.0 correlation types: value_su

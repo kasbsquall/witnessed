@@ -6,6 +6,8 @@ Your agent says it tested the change. Witnessed shows which of the functions it 
 
 **Demo video:** https://youtu.be/bU2E0hyezjk (2:40, the scan, IBM Bob's witness hunt recorded live, and the gate).
 
+**On pull requests written by a coding agent:** of 44 merged pull requests that GitHub's Copilot coding agent wrote for SigmaHQ's pySigma libraries, 33 changed functions and Witnessed flagged one, [pySigma #415](https://github.com/SigmaHQ/pySigma/pull/415). All 1,239 tests pass at its merge commit, and the five functions that download, parse and cache the new MITRE data never run, because a fixture added in the same pull request replaces the cache for every test. Details in [Merged pull requests written by a coding agent](#merged-pull-requests-written-by-a-coding-agent).
+
 Built for the IBM Bob 2.0 Hackathon (lablab.ai, September 25 to 27, 2026). The specification is in [docs/SPEC.md](docs/SPEC.md).
 
 ## The real case
@@ -33,7 +35,7 @@ The scan prints "2 of 6 changed functions were never seen running", both gates p
 
 ## How Bob is used
 
-The `Witness` custom mode (defined in `.bob/custom_modes.yaml`) can edit only `witnesses/*.py`. It loads the `witness-hunt` skill and spawns one parallel subagent per unwitnessed function. Bob wrote the code in `witnessed/`, `tests/` and `.bob/` in twelve tasks during the hackathon; the task summary screenshot of every session is in `bob_sessions/`. After the second review round, Claude (Anthropic) fixed a defect in the gate and in the report. Those changes are listed in [bob_sessions/README.md](bob_sessions/README.md).
+The `Witness` custom mode (defined in `.bob/custom_modes.yaml`) can edit only `witnesses/*.py`. It loads the `witness-hunt` skill and spawns one parallel subagent per unwitnessed function. Bob wrote the code in `witnessed/`, `tests/` and `.bob/` in thirteen tasks during the hackathon (tasks 1 to 12, and task 14, which stopped the scan from reporting abstract and stub methods); task 13 is the witness hunt recorded live; the task summary screenshot of every session is in `bob_sessions/`. After the second review round, Claude (Anthropic) fixed a defect in the gate and in the report. Those changes are listed in [bob_sessions/README.md](bob_sessions/README.md).
 
 ## Evidence levels
 
@@ -79,6 +81,18 @@ Two upstream tests, `test_internal.py::test_wrap_text_wide_chars` and `test_text
 
 ```
 python bench/history.py <path to python-tabulate clone>
+```
+
+### Merged pull requests written by a coding agent
+
+`bench/agent_prs.py` runs the same measurement on pull requests written by a coding agent. The lists in `bench/agent_prs/` hold every merged pull request authored by `app/copilot-swe-agent` in six SigmaHQ Python repositories, as of 2026-09-27: pySigma (29), pySigma-backend-splunk (5), pySigma-backend-elasticsearch (5), pySigma-backend-crowdstrike (1), pySigma-validators-sigmaHQ (1) and sigma-cli (3). For each one the script checks out the merge commit, takes the functions it changed against the first parent, runs the suite of that commit under coverage and lists the changed functions whose body never executed.
+
+Result (`bench/agent_prs.json`): 44 pull requests, 33 changed at least one function, 3 were skipped (in each sigma-cli pull request a test hit the 60 s per-test timeout, so the suite was cut short), and 1 was flagged: [pySigma #415](https://github.com/SigmaHQ/pySigma/pull/415), "Replace static MITRE data with on-demand API loading", merged 2025-11-09. At its merge commit 07eed3b the suite reports 1239 passed and 1 skipped, and 5 of its 11 changed functions never run: `_get_external_id`, `_load_mitre_attack_data` and `_get_cached_data` in `sigma/data/mitre_attack_data.py`, and `_load_mitre_d3fend_data` and `_get_cached_data` in `sigma/data/mitre_d3fend_data.py`. The reason is in the same pull request: `tests/conftest.py` gains an autouse fixture that monkeypatches both `_get_cached_data` functions to return mock data "to avoid network calls in tests". 5 of 270 changed functions in total.
+
+Two things changed the numbers while this was built, and both are recorded. The first run counted abstract methods and stubs whose body is only `pass`, `...` or `raise NotImplementedError` as never run, which flagged three more pull requests; Bob fixed the scan in task 14 so it skips them, with tests. And pySigma must run with the pyparsing version of its lock file (3.3.2): with 3.3.3, `sigma/conditions.py` raises a TypeError during tests and a function looks unexecuted when it is not. This counts alarms; it is not a precision or recall figure. `bench/agent_prs.py` was written by Claude (Anthropic), not by IBM Bob. To rerun it, install the target project's dependencies and `pytest-timeout`, then:
+
+```
+python bench/agent_prs.py <clone> bench/agent_prs/pySigma.tsv --package sigma --tests tests --out agent_prs_pySigma.json
 ```
 
 ## How it differs from diff-cover

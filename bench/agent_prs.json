@@ -1,0 +1,695 @@
+{
+ "summary": {
+  "pull_requests": 44,
+  "with_changed_functions": 33,
+  "skipped": 3,
+  "flagged": 1,
+  "changed_functions": 270,
+  "changed_functions_never_run": 5
+ },
+ "repositories": {
+  "SigmaHQ/pySigma": {
+   "summary": {
+    "pull_requests": 29,
+    "with_changed_functions": 24,
+    "skipped": 0,
+    "flagged": 1,
+    "changed_functions": 246,
+    "changed_functions_never_run": 5
+   },
+   "records": [
+    {
+     "pr": 553,
+     "commit": "c073a42f24",
+     "changed": [
+      "sigma.types.SigmaString.insert_placeholders"
+     ],
+     "never": [],
+     "tests": "1579 passed, 1 skipped, 1 warning in 26.07s"
+    },
+    {
+     "pr": 521,
+     "commit": "ebc12ff4a4",
+     "changed": [
+      "sigma.processing.pipeline.ProcessingPipeline.__add__",
+      "sigma.processing.resolver.ProcessingPipelineResolver.resolve"
+     ],
+     "never": [],
+     "tests": "1520 passed, 1 skipped, 1 warning in 24.83s"
+    },
+    {
+     "pr": 513,
+     "commit": "ee215a5574",
+     "changed": [
+      "sigma.processing.transformations.base.ValueTransformation.apply_detection"
+     ],
+     "never": [],
+     "tests": "1513 passed, 1 skipped, 1 warning in 24.53s"
+    },
+    {
+     "pr": 508,
+     "commit": "3affb4b32e",
+     "changed": [
+      "sigma.processing.transformations.values.ExtractFieldsTransformation.apply_detection_item"
+     ],
+     "never": [],
+     "tests": "1506 passed, 1 skipped, 1 warning in 25.59s"
+    },
+    {
+     "pr": 485,
+     "commit": "9322544c61",
+     "changed": [
+      "sigma.types.SigmaString.insert_placeholders"
+     ],
+     "never": [],
+     "tests": "1483 passed, 1 skipped, 1 warning in 25.43s"
+    },
+    {
+     "pr": 478,
+     "commit": "e1ab85dd54",
+     "changed": [
+      "sigma.rule.base.SigmaYAMLLoader.construct_mapping"
+     ],
+     "never": [],
+     "tests": "1470 passed, 1 skipped, 1 warning in 33.35s"
+    },
+    {
+     "pr": 477,
+     "commit": "ef616f0b80",
+     "changed": []
+    },
+    {
+     "pr": 476,
+     "commit": "a4f5b4202f",
+     "changed": []
+    },
+    {
+     "pr": 475,
+     "commit": "adc694d4eb",
+     "changed": [
+      "sigma.modifiers.SigmaNegateModifier.modify",
+      "sigma.rule.detection.SigmaDetectionItem.postprocess"
+     ],
+     "never": [],
+     "tests": "1470 passed, 1 skipped, 1 warning in 32.09s"
+    },
+    {
+     "pr": 473,
+     "commit": "9be9e26fdc",
+     "changed": [
+      "sigma.conditions.ConditionSelector.resolve_referenced_detections",
+      "sigma.filters.SigmaFilter.apply_on_rule",
+      "sigma.filters.SigmaFilter.apply_on_rule._replace_token"
+     ],
+     "never": [],
+     "tests": "1458 passed, 1 skipped, 1 warning in 26.76s"
+    },
+    {
+     "pr": 471,
+     "commit": "cf3c15d4e6",
+     "changed": [
+      "sigma.processing.pipeline.ProcessingItemBase._base_args_from_dict",
+      "sigma.processing.pipeline.ProcessingItemBase._instantiate_transformation",
+      "sigma.processing.pipeline.ProcessingItem.from_dict",
+      "sigma.processing.pipeline.ProcessingPipeline.from_dict",
+      "sigma.processing.pipeline.ProcessingPipeline.from_yaml",
+      "sigma.processing.transformations.external.ExternalSourceBaseTransformation._external_sources_allowed",
+      "sigma.processing.transformations.external.ExternalSourceBaseTransformation._get_values",
+      "sigma.processing.transformations.external.ExternalSourceBaseTransformation._parse_data",
+      "sigma.processing.transformations.external.ExternalSourceBaseTransformation._parse_plaintext",
+      "sigma.processing.transformations.external.ExternalSourceBaseTransformation._parse_csv",
+      "sigma.processing.transformations.external.ExternalSourceBaseTransformation._parse_json",
+      "sigma.processing.transformations.external.ExternalSourceBaseTransformation._parse_yaml_data",
+      "sigma.processing.transformations.external.ExternalSourceBaseTransformation.placeholder_replacements",
+      "sigma.processing.transformations.external.FilePlaceholderTransformation.__post_init__",
+      "sigma.processing.transformations.external.FilePlaceholderTransformation._fetch_data",
+      "sigma.processing.transformations.external.HTTPPlaceholderTransformation.__post_init__",
+      "sigma.processing.transformations.external.HTTPPlaceholderTransformation._fetch_data",
+      "sigma.processing.transformations.external.CommandPlaceholderTransformation.__post_init__",
+      "sigma.processing.transformations.external.CommandPlaceholderTransformation._fetch_data"
+     ],
+     "never": [],
+     "tests": "1452 passed, 1 skipped, 1 warning in 31.35s"
+    },
+    {
+     "pr": 468,
+     "commit": "bdd9885404",
+     "changed": [
+      "sigma.processing.transformations.base.FieldMappingTransformationBase.apply_detection"
+     ],
+     "never": [],
+     "tests": "1460 passed, 1 skipped, 1 warning in 31.19s"
+    },
+    {
+     "pr": 467,
+     "commit": "aca1185e31",
+     "changed": [
+      "sigma.data.mitre_attack._load_mitre_attack_data",
+      "sigma.data.mitre_d3fend._load_mitre_d3fend_data"
+     ],
+     "never": [],
+     "tests": "1401 passed, 1 skipped, 1 warning in 28.65s"
+    },
+    {
+     "pr": 465,
+     "commit": "993450715d",
+     "changed": [
+      "sigma.validators.core.tags.ATTACKTagValidator.__init__",
+      "sigma.validators.core.tags.ATTACKTagValidator._load_allowed_tags",
+      "sigma.validators.core.tags.ATTACKTagValidator.validate_tag",
+      "sigma.validators.core.tags.D3FENDTagValidator.__init__",
+      "sigma.validators.core.tags.D3FENDTagValidator._load_allowed_tags",
+      "sigma.validators.core.tags.D3FENDTagValidator.validate_tag"
+     ],
+     "never": [],
+     "tests": "1399 passed, 1 skipped, 1 warning in 30.57s"
+    },
+    {
+     "pr": 452,
+     "commit": "5b7b7e3e45",
+     "changed": [
+      "sigma.conditions._parse_condition_string",
+      "sigma.conditions.SigmaCondition.parse",
+      "sigma.modifiers.SigmaModifier._get_modify_type_hint",
+      "sigma.modifiers.SigmaModifier.type_check",
+      "sigma.types.SigmaString._merge_strs",
+      "sigma.types.SigmaString.contains_special",
+      "sigma.types.SigmaString.convert",
+      "sigma.types.sigma_type"
+     ],
+     "never": [],
+     "tests": "1378 passed, 1 skipped, 1 warning in 30.61s"
+    },
+    {
+     "pr": 451,
+     "commit": "f49862d6e6",
+     "changed": [
+      "sigma.backends.test.backend.TextQueryTestBackend.__init__",
+      "sigma.backends.test.backend.TextQueryTestBackend.finalize_output_list_of_dict",
+      "sigma.conditions.ParentChainMixin.parent_chain",
+      "sigma.conditions.ParentChainMixin.parent_chain_classes",
+      "sigma.conditions.ParentChainMixin.parent_chain_condition_classes",
+      "sigma.conditions.ParentChainMixin.postprocess",
+      "sigma.conditions.ConditionItem.from_parsed",
+      "sigma.conditions.ConditionItem.postprocess",
+      "sigma.conditions.ConditionIdentifier.postprocess",
+      "sigma.conditions.ConditionSelector.postprocess",
+      "sigma.conditions.SigmaCondition.parse",
+      "sigma.conditions.SigmaCondition.parsed",
+      "sigma.conversion.base.Backend.convert_condition_field_eq_val",
+      "sigma.conversion.base.Backend.convert_condition_val",
+      "sigma.conversion.base.Backend.convert_condition",
+      "sigma.correlations.CorrelationConditionItem.from_parsed",
+      "sigma.correlations.SigmaExtendedCorrelationCondition.parse",
+      "sigma.correlations.SigmaExtendedCorrelationCondition.parsed",
+      "sigma.correlations.SigmaExtendedCorrelationCondition.get_referenced_rules",
+      "sigma.correlations.SigmaExtendedCorrelationCondition.get_referenced_rules.traverse",
+      "sigma.data.mitre_attack._get_external_id",
+      "sigma.data.mitre_attack._load_mitre_attack_data",
+      "sigma.data.mitre_attack._get_cached_data",
+      "sigma.data.mitre_d3fend._load_mitre_d3fend_data",
+      "sigma.data.mitre_d3fend._get_cached_data",
+      "sigma.exceptions.SigmaError.__init__",
+      "sigma.exceptions.SigmaConversionError.__init__",
+      "sigma.exceptions.SigmaPipelineNotAllowedForBackendError.__init__",
+      "sigma.exceptions.SigmaPipelineNotFoundError.__init__",
+      "sigma.exceptions.SigmaPipelineConditionError.__init__",
+      "sigma.modifiers.SigmaModifier.__init__",
+      "sigma.modifiers.SigmaModifier.type_check",
+      "sigma.modifiers.SigmaContainsModifier.modify",
+      "sigma.modifiers.SigmaStartswithModifier.modify",
+      "sigma.modifiers.SigmaEndswithModifier.modify",
+      "sigma.modifiers.SigmaWindowsDashModifier.modify",
+      "sigma.modifiers.SigmaWindowsDashModifier.modify.callback",
+      "sigma.modifiers.SigmaExpandModifier.modify",
+      "sigma.pipelines.base.Pipeline.__init__",
+      "sigma.plugins.SigmaPlugin.is_compatible",
+      "sigma.plugins.SigmaPlugin._get_pypi_json",
+      "sigma.plugins.SigmaPlugin._extract_pysigma_specifier",
+      "sigma.plugins.SigmaPlugin.pysigma_version_from_pypi",
+      "sigma.plugins.SigmaPlugin.find_compatible_version",
+      "sigma.plugins.SigmaPluginDirectory.get_plugin_by_uuid",
+      "sigma.processing.condition_expressions.ConditionIdentifier.from_parsed",
+      "sigma.processing.condition_expressions.ConditionIdentifier.match",
+      "sigma.processing.condition_expressions.ConditionIdentifier.match_field_name",
+      "sigma.processing.condition_expressions.BinaryConditionOp.from_parsed",
+      "sigma.processing.condition_expressions.BinaryConditionOp.match",
+      "sigma.processing.condition_expressions.BinaryConditionOp.match_field_name",
+      "sigma.processing.condition_expressions.ConditionNOT.from_parsed",
+      "sigma.processing.condition_expressions.ConditionNOT.match",
+      "sigma.processing.condition_expressions.ConditionNOT.match_field_name",
+      "sigma.processing.conditions.base.RuleDetectionItemCondition.match",
+      "sigma.processing.conditions.fields.IncludeFieldCondition.match_field_name",
+      "sigma.processing.conditions.fields.ExcludeFieldCondition.match_field_name",
+      "sigma.processing.conditions.rule.LogsourceCondition.match",
+      "sigma.processing.conditions.rule.RuleContainsFieldCondition.find_detection_item",
+      "sigma.processing.conditions.rule.RuleContainsDetectionItemCondition.find_detection_item",
+      "sigma.processing.conditions.rule.IsSigmaRuleCondition.match",
+      "sigma.processing.conditions.rule.IsSigmaCorrelationRuleCondition.match",
+      "sigma.processing.conditions.rule.RuleAttributeCondition.match",
+      "sigma.processing.conditions.rule.RuleTagCondition.match",
+      "sigma.processing.conditions.state.RuleProcessingItemAppliedCondition.match",
+      "sigma.processing.conditions.state.RuleProcessingStateCondition.match",
+      "sigma.processing.conditions.state.FieldNameProcessingStateCondition.match_field_name",
+      "sigma.processing.conditions.state.FieldNameProcessingItemAppliedCondition.match_field_name",
+      "sigma.processing.pipeline.ProcessingItemBase._resolve_condition_expression",
+      "sigma.processing.pipeline.ProcessingItemBase._parse_conditions",
+      "sigma.processing.pipeline.ProcessingItemBase._parse_condition_linking",
+      "sigma.processing.pipeline.ProcessingItemBase.match_rule_conditions",
+      "sigma.processing.pipeline.ProcessingItem.__post_init__",
+      "sigma.processing.pipeline.ProcessingItem.apply",
+      "sigma.processing.pipeline.ProcessingItem.match_field_name",
+      "sigma.processing.pipeline.QueryPostprocessingItem.apply",
+      "sigma.processing.pipeline.ProcessingPipeline.apply",
+      "sigma.processing.pipeline.ProcessingPipeline.postprocess_query",
+      "sigma.processing.pipeline.ProcessingPipeline.track_field_processing_items",
+      "sigma.processing.pipeline.ProcessingPipeline.field_was_processed_by",
+      "sigma.processing.pipeline.ProcessingPipeline.__add__",
+      "sigma.processing.postprocessing.QueryPostprocessingTransformation.apply",
+      "sigma.processing.postprocessing.EmbedQueryTransformation.apply",
+      "sigma.processing.postprocessing.QuerySimpleTemplateTransformation.apply",
+      "sigma.processing.postprocessing.QueryTemplateTransformation.apply",
+      "sigma.processing.postprocessing.EmbedQueryInJSONTransformation._replace_placeholder",
+      "sigma.processing.postprocessing.EmbedQueryInJSONTransformation.apply",
+      "sigma.processing.postprocessing.ReplaceQueryTransformation.apply",
+      "sigma.processing.postprocessing.NestedQueryPostprocessingTransformation.apply",
+      "sigma.processing.resolver.ProcessingPipelineResolver.resolve_pipeline",
+      "sigma.processing.resolver.ProcessingPipelineResolver.resolve",
+      "sigma.processing.tracking.ProcessingItemTrackingMixin.add_applied_processing_item",
+      "sigma.processing.tracking.FieldMappingTracking.__init__",
+      "sigma.processing.tracking.FieldMappingTracking.add_mapping",
+      "sigma.processing.transformations.base.Transformation.processing_item_applied",
+      "sigma.processing.transformations.base.PreprocessingTransformation.apply",
+      "sigma.processing.transformations.base.DetectionItemTransformation.apply",
+      "sigma.processing.transformations.base.FieldMappingTransformationBase.apply",
+      "sigma.processing.transformations.base.FieldMappingTransformationBase.apply_detection_item",
+      "sigma.processing.transformations.base.ValueTransformation.__post_init__",
+      "sigma.processing.transformations.base.ValueTransformation.apply_detection_item",
+      "sigma.processing.transformations.base.StringValueTransformation.apply_value",
+      "sigma.processing.transformations.base.ConditionTransformation.apply",
+      "sigma.processing.transformations.condition.AddConditionTransformation.apply",
+      "sigma.processing.transformations.detection_item.DropDetectionItemTransformation.apply_detection_item",
+      "sigma.processing.transformations.failure.RuleFailureTransformation.apply",
+      "sigma.processing.transformations.failure.StrictFieldMappingFailure.apply",
+      "sigma.processing.transformations.fields.FieldMappingTransformation.apply_field_name",
+      "sigma.processing.transformations.fields.FieldPrefixMappingTransformation.apply_field_name",
+      "sigma.processing.transformations.fields.FieldFunctionTransformation.apply_field_name",
+      "sigma.processing.transformations.fields.AddFieldnameSuffixTransformation.apply_field_name",
+      "sigma.processing.transformations.fields.AddFieldnamePrefixTransformation.apply_field_name",
+      "sigma.processing.transformations.fields.AddFieldTransformation.apply",
+      "sigma.processing.transformations.fields.RemoveFieldTransformation.apply",
+      "sigma.processing.transformations.fields.SetFieldTransformation.apply",
+      "sigma.processing.transformations.meta.NestedProcessingTransformation.__post_init__",
+      "sigma.processing.transformations.meta.NestedProcessingTransformation.apply",
+      "sigma.processing.transformations.placeholder.BasePlaceholderTransformation.apply_value",
+      "sigma.processing.transformations.placeholder.BasePlaceholderTransformation.placeholder_replacements_base",
+      "sigma.processing.transformations.placeholder.QueryExpressionPlaceholderTransformation.apply_string_value",
+      "sigma.processing.transformations.rule.ChangeLogsourceTransformation.apply",
+      "sigma.processing.transformations.rule.SetCustomAttributeTransformation.apply",
+      "sigma.processing.transformations.state.SetStateTransformation.apply",
+      "sigma.processing.transformations.values.HashesFieldsDetectionItemTransformation.apply_detection_item",
+      "sigma.processing.transformations.values.HashesFieldsDetectionItemTransformation._parse_hash_values",
+      "sigma.processing.transformations.values.ReplaceStringTransformation.apply_value",
+      "sigma.processing.transformations.values.ReplaceStringTransformation.apply_string_value",
+      "sigma.processing.transformations.values.MapStringTransformation.apply_string_value",
+      "sigma.processing.transformations.values.RegexTransformation.apply_string_value",
+      "sigma.processing.transformations.values.SetValueTransformation.__post_init__",
+      "sigma.processing.transformations.values.SetValueTransformation.apply_value",
+      "sigma.processing.transformations.values.ConvertTypeTransformation.apply_value",
+      "sigma.processing.transformations.values.CaseTransformation.apply_string_value",
+      "sigma.rule.attributes.SigmaRuleTag.from_str",
+      "sigma.rule.logsource.SigmaLogSource.from_dict",
+      "sigma.types.SigmaString.__init__",
+      "sigma.types.SigmaString.__getitem__",
+      "sigma.types.SigmaString.insert_placeholders",
+      "sigma.types.SigmaString.replace_with_placeholder",
+      "sigma.types.SigmaString.__add__",
+      "sigma.types.SigmaString.__radd__",
+      "sigma.types.SigmaString.contains_placeholder",
+      "sigma.types.SigmaString.replace_placeholders",
+      "sigma.types.SigmaString.map_parts",
+      "sigma.types.SigmaString.map_str_parts",
+      "sigma.types.SigmaString.convert",
+      "sigma.types.SigmaRegularExpression.__post_init__",
+      "sigma.types.SigmaRegularExpression.contains_placeholder",
+      "sigma.types.SigmaRegularExpression.replace_placeholders",
+      "sigma.types.SigmaQueryExpression.finalize",
+      "sigma.types.sigma_type",
+      "sigma.validation.SigmaValidator.__init__",
+      "sigma.validators.core.condition.DanglingDetectionValidator.condition_referenced_ids",
+      "sigma.validators.core.condition.DanglingDetectionValidator.validate",
+      "sigma.validators.core.condition.DanglingConditionValidator.condition_unknown_referenced_ids",
+      "sigma.validators.core.condition.DanglingConditionValidator.validate",
+      "sigma.validators.core.condition.ThemConditionWithSingleDetectionValidator.validate",
+      "sigma.validators.core.condition.AllOfThemConditionValidator.validate",
+      "sigma.validators.core.logsources.SpecificInsteadOfGenericLogsourceValidator.validate",
+      "sigma.validators.core.logsources.FieldnameLogsourceValidator.validate",
+      "sigma.validators.core.tags.DuplicateTagValidator.validate"
+     ],
+     "never": [],
+     "tests": "1378 passed, 1 skipped, 1 warning in 31.46s"
+    },
+    {
+     "pr": 450,
+     "commit": "4414a8f5e4",
+     "changed": []
+    },
+    {
+     "pr": 445,
+     "commit": "f5966ee2da",
+     "changed": [
+      "sigma.processing.transformations.values.ReplaceStringTransformation.apply_value"
+     ],
+     "never": [],
+     "tests": "1334 passed, 1 skipped, 1 warning in 28.54s"
+    },
+    {
+     "pr": 435,
+     "commit": "7b1e7c312b",
+     "changed": [
+      "sigma.processing.transformations.values.ConvertTypeTransformation.apply_value"
+     ],
+     "never": [],
+     "tests": "1286 passed, 1 skipped, 1 warning in 27.50s"
+    },
+    {
+     "pr": 426,
+     "commit": "8ab7582934",
+     "changed": [
+      "sigma.plugins.SigmaPlugin.install",
+      "sigma.plugins.SigmaPlugin._get_pypi_json",
+      "sigma.plugins.SigmaPlugin._extract_pysigma_specifier",
+      "sigma.plugins.SigmaPlugin.pysigma_version_from_pypi",
+      "sigma.plugins.SigmaPlugin.find_compatible_version"
+     ],
+     "never": [],
+     "tests": "1265 passed, 1 skipped, 1 warning in 26.40s"
+    },
+    {
+     "pr": 416,
+     "commit": "bd971497ed",
+     "changed": [
+      "sigma.processing.conditions.rule.RuleAttributeCondition.__post_init__",
+      "sigma.processing.conditions.rule.RuleAttributeCondition.match"
+     ],
+     "never": [],
+     "tests": "1252 passed, 1 skipped, 1 warning in 17.29s"
+    },
+    {
+     "pr": 415,
+     "commit": "07eed3b092",
+     "changed": [
+      "sigma.data.mitre_attack_data._get_external_id",
+      "sigma.data.mitre_attack_data._load_mitre_attack_data",
+      "sigma.data.mitre_attack_data._get_cached_data",
+      "sigma.data.mitre_attack_data.__getattr__",
+      "sigma.data.mitre_attack_data.clear_cache",
+      "sigma.data.mitre_d3fend_data._load_mitre_d3fend_data",
+      "sigma.data.mitre_d3fend_data._get_cached_data",
+      "sigma.data.mitre_d3fend_data.__getattr__",
+      "sigma.data.mitre_d3fend_data.clear_cache",
+      "sigma.validators.core.tags.ATTACKTagValidator.__init__",
+      "sigma.validators.core.tags.D3FENDTagValidator.__init__"
+     ],
+     "never": [
+      "sigma.data.mitre_attack_data._get_external_id",
+      "sigma.data.mitre_attack_data._load_mitre_attack_data",
+      "sigma.data.mitre_attack_data._get_cached_data",
+      "sigma.data.mitre_d3fend_data._load_mitre_d3fend_data",
+      "sigma.data.mitre_d3fend_data._get_cached_data"
+     ],
+     "tests": "1239 passed, 1 skipped, 1 warning in 13.55s"
+    },
+    {
+     "pr": 413,
+     "commit": "3515150296",
+     "changed": [
+      "sigma.rule.attributes.SigmaStatus.__eq__",
+      "sigma.rule.attributes.SigmaStatus.__ne__",
+      "sigma.rule.attributes.SigmaLevel.__ne__"
+     ],
+     "never": [],
+     "tests": "1237 passed, 1 skipped, 1 warning in 14.58s"
+    },
+    {
+     "pr": 408,
+     "commit": "e3c521ea77",
+     "changed": []
+    },
+    {
+     "pr": 406,
+     "commit": "d5e61ef027",
+     "changed": [
+      "sigma.processing.transformations.base.FieldMappingTransformationBase._add_wildcards_to_value",
+      "sigma.processing.transformations.base.FieldMappingTransformationBase.apply_detection_item"
+     ],
+     "never": [],
+     "tests": "1243 passed, 1 skipped, 1 warning in 15.42s"
+    },
+    {
+     "pr": 405,
+     "commit": "130d27c73c",
+     "changed": [
+      "sigma.processing.transformations.condition.AddConditionTransformation.apply_condition"
+     ],
+     "never": [],
+     "tests": "1239 passed, 1 skipped, 1 warning in 15.07s"
+    },
+    {
+     "pr": 403,
+     "commit": "f2b53056a8",
+     "changed": []
+    },
+    {
+     "pr": 399,
+     "commit": "c9b56ae5d5",
+     "changed": [
+      "sigma.processing.templates.TemplateBase.__post_init__",
+      "sigma.processing.templates.TemplateBase._load_vars_from_file"
+     ],
+     "never": [],
+     "tests": "1226 passed, 1 skipped, 1 warning in 15.07s"
+    },
+    {
+     "pr": 398,
+     "commit": "0b327c152f",
+     "changed": [
+      "sigma.conversion.base.Backend.convert_correlation_rule",
+      "sigma.conversion.base.TextQueryBackend.convert_correlation_value_sum_rule",
+      "sigma.conversion.base.TextQueryBackend.convert_correlation_value_avg_rule",
+      "sigma.conversion.base.TextQueryBackend.convert_correlation_value_percentile_rule",
+      "sigma.conversion.base.TextQueryBackend.convert_correlation_value_median_rule",
+      "sigma.conversion.base.TextQueryBackend.convert_correlation_aggregation_from_template",
+      "sigma.correlations.SigmaCorrelationCondition.from_dict",
+      "sigma.correlations.SigmaCorrelationCondition.to_dict",
+      "sigma.correlations.SigmaCorrelationRule.__post_init__"
+     ],
+     "never": [],
+     "tests": "1235 passed, 1 skipped, 1 warning in 15.71s"
+    }
+   ]
+  },
+  "SigmaHQ/pySigma-backend-splunk": {
+   "summary": {
+    "pull_requests": 5,
+    "with_changed_functions": 5,
+    "skipped": 0,
+    "flagged": 0,
+    "changed_functions": 16,
+    "changed_functions_never_run": 0
+   },
+   "records": [
+    {
+     "pr": 78,
+     "commit": "197526dc1a",
+     "changed": [
+      "sigma.backends.splunk.splunk.SplunkBackend.finalize_query_default"
+     ],
+     "never": [],
+     "tests": "139 passed in 1.54s"
+    },
+    {
+     "pr": 66,
+     "commit": "1e5d1e50d8",
+     "changed": [
+      "sigma.backends.splunk.splunk.SplunkDeferredORRegularExpression.get_all_condition_fields",
+      "sigma.backends.splunk.splunk.SplunkBackend.finish_query",
+      "sigma.backends.splunk.splunk.SplunkBackend.finalize_query_default"
+     ],
+     "never": [],
+     "tests": "124 passed in 1.51s"
+    },
+    {
+     "pr": 65,
+     "commit": "9a1157cb58",
+     "changed": [
+      "sigma.backends.splunk.splunk.SplunkBackend.finalize_query_data_model"
+     ],
+     "never": [],
+     "tests": "123 passed in 1.26s"
+    },
+    {
+     "pr": 64,
+     "commit": "1e5e91fc92",
+     "changed": [
+      "sigma.backends.splunk.splunk.SplunkBackend.finish_query",
+      "sigma.backends.splunk.splunk.SplunkBackend.finalize_query_default",
+      "sigma.backends.splunk.splunk.SplunkBackend.finalize_query_savedsearches"
+     ],
+     "never": [],
+     "tests": "121 passed in 1.27s"
+    },
+    {
+     "pr": 62,
+     "commit": "9ccf2497b9",
+     "changed": [
+      "sigma.backends.splunk.spl2.SplunkSPL2Backend.__init__",
+      "sigma.backends.splunk.spl2.SplunkSPL2Backend.convert_condition_val_str",
+      "sigma.backends.splunk.spl2.SplunkSPL2Backend.finalize_query_default",
+      "sigma.backends.splunk.spl2.SplunkSPL2Backend.finalize_query_module",
+      "sigma.backends.splunk.spl2.SplunkSPL2Backend.finalize_output_module",
+      "sigma.pipelines.splunk.splunk.splunk_windows_pipeline",
+      "sigma.pipelines.splunk.splunk.splunk_windows_sysmon_acceleration_keywords",
+      "sigma.pipelines.splunk.splunk.splunk_cim_data_model"
+     ],
+     "never": [],
+     "tests": "115 passed in 1.25s"
+    }
+   ]
+  },
+  "SigmaHQ/pySigma-backend-elasticsearch": {
+   "summary": {
+    "pull_requests": 5,
+    "with_changed_functions": 2,
+    "skipped": 0,
+    "flagged": 0,
+    "changed_functions": 5,
+    "changed_functions_never_run": 0
+   },
+   "records": [
+    {
+     "pr": 214,
+     "commit": "d1892c5d08",
+     "changed": []
+    },
+    {
+     "pr": 208,
+     "commit": "fa72f203d0",
+     "changed": []
+    },
+    {
+     "pr": 204,
+     "commit": "036a40596b",
+     "changed": [
+      "sigma.pipelines.elasticsearch.macos.ecs_macos_esf",
+      "sigma.pipelines.elasticsearch.windows.ecs_windows"
+     ],
+     "never": [],
+     "tests": "135 passed, 58 skipped, 5 warnings in 39.08s"
+    },
+    {
+     "pr": 203,
+     "commit": "fbba85073b",
+     "changed": [
+      "sigma.backends.elasticsearch.elasticsearch_eql.EqlBackend.finalize_output_threat_model",
+      "sigma.backends.elasticsearch.elasticsearch_esql.ESQLBackend.finalize_output_threat_model",
+      "sigma.backends.elasticsearch.elasticsearch_lucene.LuceneBackend.finalize_output_threat_model"
+     ],
+     "never": [],
+     "tests": "129 passed, 58 skipped, 5 warnings in 39.18s"
+    },
+    {
+     "pr": 186,
+     "commit": "cd0319673c",
+     "changed": []
+    }
+   ]
+  },
+  "SigmaHQ/pySigma-backend-crowdstrike": {
+   "summary": {
+    "pull_requests": 1,
+    "with_changed_functions": 1,
+    "skipped": 0,
+    "flagged": 0,
+    "changed_functions": 2,
+    "changed_functions_never_run": 0
+   },
+   "records": [
+    {
+     "pr": 28,
+     "commit": "e3ae0b916d",
+     "changed": [
+      "sigma.pipelines.crowdstrike.crowdstrike.crowdstrike_fdr_pipeline",
+      "sigma.pipelines.crowdstrike.crowdstrike.crowdstrike_falcon_pipeline"
+     ],
+     "never": [],
+     "tests": "1 failed, 96 passed, 44 warnings in 1.47s"
+    }
+   ]
+  },
+  "SigmaHQ/pySigma-validators-sigmaHQ": {
+   "summary": {
+    "pull_requests": 1,
+    "with_changed_functions": 1,
+    "skipped": 0,
+    "flagged": 0,
+    "changed_functions": 1,
+    "changed_functions_never_run": 0
+   },
+   "records": [
+    {
+     "pr": 75,
+     "commit": "66db67d434",
+     "changed": [
+      "sigma.validators.sigmahq.tags.SigmahqTagsTechniquesWithoutTacticsValidator.validate"
+     ],
+     "never": [],
+     "tests": "3 failed, 272 passed in 24.13s"
+    }
+   ]
+  },
+  "SigmaHQ/sigma-cli": {
+   "summary": {
+    "pull_requests": 3,
+    "with_changed_functions": 0,
+    "skipped": 3,
+    "flagged": 0,
+    "changed_functions": 0,
+    "changed_functions_never_run": 0
+   },
+   "records": [
+    {
+     "pr": 93,
+     "commit": "c92a9f2a56",
+     "changed": [
+      "sigma.cli.convert.render_output_filename",
+      "sigma.cli.convert.write_separate_files",
+      "sigma.cli.convert.write_separate_files.write_callback",
+      "sigma.cli.convert.convert"
+     ],
+     "skipped": "a test exceeded the per-test timeout; suite cut short"
+    },
+    {
+     "pr": 89,
+     "commit": "41c57a2345",
+     "changed": [
+      "sigma.cli.analyze.analyze_attack"
+     ],
+     "skipped": "a test exceeded the per-test timeout; suite cut short"
+    },
+    {
+     "pr": 87,
+     "commit": "9a0a38e865",
+     "changed": [
+      "sigma.cli.list._plugin_id_from_module",
+      "sigma.cli.list._get_backend_plugin_id",
+      "sigma.cli.list._get_pipeline_plugin_id",
+      "sigma.cli.list.list_targets",
+      "sigma.cli.list.list_pipelines"
+     ],
+     "skipped": "a test exceeded the per-test timeout; suite cut short"
+    }
+   ]
+  }
+ }
+}
